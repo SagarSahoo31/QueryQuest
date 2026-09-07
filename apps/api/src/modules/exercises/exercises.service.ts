@@ -1,4 +1,4 @@
-﻿import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 
 @Injectable()
@@ -74,7 +74,7 @@ export class ExercisesService {
       xpEarned: attempt.xpEarned,
       attemptId: attempt.id,
       explanation: isCorrect ? exercise.explanation : null,
-      hint: !isCorrect ? this.getHint(exercise, 0) : null,
+      hint: !isCorrect ? this.extractHint(exercise, 0) : null,
     };
   }
 
@@ -161,7 +161,7 @@ export class ExercisesService {
     }
   }
 
-  private getHint(exercise: any, level: number): string | null {
+  private extractHint(exercise: any, level: number): string | null {
     const hints = exercise.hints as string[];
     return hints?.[level] ?? null;
   }

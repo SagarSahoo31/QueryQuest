@@ -19,7 +19,7 @@ interface TokenPayload {
   isGuest: boolean;
 }
 
-interface AuthTokens {
+export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
@@ -33,6 +33,10 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
+
+  async getUserById(id: string) {
+    return this.usersService.getUserById(id);
+  }
 
   async register(dto: RegisterDto) {
     // Check if email already exists

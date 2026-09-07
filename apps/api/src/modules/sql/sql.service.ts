@@ -1,15 +1,15 @@
-﻿import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { Client } from 'pg';
 
-interface QueryResult {
+export interface QueryResult {
   columns: string[];
   rows: any[][];
   rowCount: number;
   executionTimeMs: number;
 }
 
-interface QueryError {
+export interface QueryError {
   code: string;
   message: string;
   hint?: string;
@@ -129,7 +129,7 @@ export class SqlService {
       if (upperQuery.includes(keyword)) {
         return {
           code: 'SQL_FORBIDDEN',
-          message: The operation "" is not allowed in this environment.,
+          message: `The operation "${keyword}" is not allowed in this environment.`,
           hint: 'This SQL playground only supports SELECT queries and limited data modification.',
         };
       }
@@ -161,12 +161,12 @@ export class SqlService {
       await client.query('SET statement_timeout = 5000');
 
       // Set search path to the dataset schema
-      await client.query(SET search_path TO dataset_, public);
+      await client.query(`SET search_path TO dataset_${datasetId}, public`);
 
       const result = await client.query(query);
 
-      const columns = result.fields.map((f) => f.name);
-      const rows = result.rows.map((row) => columns.map((col) => row[col]));
+      const columns = result.fields.map((f: any) => f.name);
+      const rows = result.rows.map((row: any) => columns.map((col: any) => row[col]));
 
       return {
         columns,
@@ -189,7 +189,7 @@ export class SqlService {
 
       return {
         code: 'SQL_SYNTAX_ERROR',
-        message: Your query contains a syntax error near "".,
+        message: `Your query contains a syntax error near "${near}".`,
         hint: this.getSyntaxHint(near, message),
         position: error.position,
       };
@@ -203,8 +203,8 @@ export class SqlService {
 
       return {
         code: 'SQL_TABLE_NOT_FOUND',
-        message: The table "" doesn't exist in this database.,
-        hint: Available tables: ,
+        message: `The table "${tableName}" doesn't exist in this database.`,
+        hint: `Available tables: ${availableTables}`,
       };
     }
 
@@ -215,7 +215,7 @@ export class SqlService {
 
       return {
         code: 'SQL_COLUMN_NOT_FOUND',
-        message: Column "" doesn't exist in this table.,
+        message: `Column "${columnName}" doesn't exist in this table.`,
         hint: 'Check the table schema to see available columns.',
       };
     }
@@ -245,15 +245,13 @@ export class SqlService {
       SELCET: 'SELECT',
       WHER: 'WHERE',
       WERE: 'WHERE',
-      FORM: 'FROM',
-      FORM: 'FROM',
       ORDRE: 'ORDER',
       GROPU: 'GROUP',
       GROP: 'GROUP',
     };
 
     if (typos[near]) {
-      return Did you mean "" instead of ""?;
+      return `Did you mean "${typos[near]}" instead of "${near}"?`;
     }
 
     if (message.includes('at end of input')) {
