@@ -1,0 +1,40 @@
+{
+  "name": "queryquest",
+  "version": "1.0.0",
+  "description": "A mobile-first SQL learning & execution platform — vibe coded because my sister asked for it! ✨",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "mobile": "npm run --workspace=@queryquest/mobile",
+    "api": "npm run --workspace=@queryquest/api",
+    "admin": "npm run --workspace=@queryquest/admin",
+    "sql-executor": "npm run --workspace=@queryquest/sql-executor",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "dev:mobile": "npm run dev --workspace=@queryquest/mobile",
+    "dev:api": "npm run dev --workspace=@queryquest/api",
+    "dev:sql-executor": "npm run dev --workspace=@queryquest/sql-executor",
+    "db:migrate": "npm run db:migrate --workspace=@queryquest/api",
+    "db:seed": "npm run db:seed --workspace=@queryquest/api",
+    "db:reset": "npm run db:reset --workspace=@queryquest/api"
+  },
+  "keywords": [
+    "sql",
+    "learning",
+    "education",
+    "mobile",
+    "react-native",
+    "nestjs",
+    "postgresql"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
