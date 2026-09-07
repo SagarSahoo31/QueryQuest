@@ -5,8 +5,7 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
-let server: ReturnType<Awaited<ReturnType<typeof createApp>>['getHttpAdapter']['getInstance']>;
-
+let server: any;
 async function createApp() {
   const app = await NestFactory.create(AppModule);
 
