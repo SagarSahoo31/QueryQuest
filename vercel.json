@@ -1,15 +1,9 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "apps/admin/index.html",
-      "use": "@vercel/static"
-    }
-  ],
+  "outputDirectory": "apps/admin",
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/apps/admin/index.html"
+      "dest": "/index.html"
     }
   ]
 }
