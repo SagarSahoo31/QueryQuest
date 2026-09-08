@@ -1,0 +1,2073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QueryQuest — SQL Learning & Execution Platform</title>
+  <meta name="description" content="Duolingo meets LeetCode meets a SQL IDE. Learn SQL through gamified lessons and an interactive SQL playground." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ===== DESIGN TOKENS ===== */
+    :root {
+      --bg: #0B0F19;
+      --surface: #151C2C;
+      --surface-border: #232D42;
+      --surface-highlight: #1E293B;
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --primary: #6366F1;
+      --primary-light: #818CF8;
+      --primary-dark: #4F46E5;
+      --secondary: #10B981;
+      --secondary-light: #34D399;
+      --accent: #F59E0B;
+      --accent-light: #FBBF24;
+      --error: #EF4444;
+      --error-bg: rgba(239, 68, 68, 0.12);
+      --error-border: rgba(239, 68, 68, 0.3);
+      --success-bg: rgba(16, 185, 129, 0.12);
+      --success-border: rgba(16, 185, 129, 0.3);
+      --warning-bg: rgba(245, 158, 11, 0.12);
+      --editor-bg: #0F172A;
+      --editor-text: #E2E8F0;
+      --editor-keyword: #38BDF8;
+      --editor-function: #F472B6;
+      --editor-string: #A7F3D0;
+      --editor-number: #FDE047;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --radius-lg: 20px;
+    }
+
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; outline: none; }
+    textarea, input { font-family: 'JetBrains Mono', monospace; outline: none; }
+    code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--surface-border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* ===== LAYOUT ===== */
+    .app { display: flex; flex-direction: column; height: 100vh; }
+
+    /* ===== HEADER ===== */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 0 20px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 100;
+      position: relative;
+    }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-logo-icon {
+      width: 34px;
+      height: 34px;
+      background: var(--primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .header-logo-text {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+    .header-logo-text span { color: var(--primary-light); }
+    .header-stats {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .stat-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--surface-highlight);
+      border-radius: 20px;
+      border: 1px solid var(--surface-border);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: default;
+    }
+    .stat-chip .icon { font-size: 16px; }
+    .stat-chip.streak { color: var(--accent); }
+    .stat-chip.xp { color: var(--secondary); }
+    .stat-chip.level { color: var(--primary-light); }
+
+    /* ===== NAV ===== */
+    .nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--surface-border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: transparent;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .nav-btn .nav-icon { font-size: 16px; }
+    .nav-btn:hover { color: var(--text-secondary); }
+    .nav-btn.active { color: var(--primary-light); border-bottom-color: var(--primary); }
+
+    /* ===== PAGES ===== */
+    .page { display: none; flex: 1; overflow: hidden; }
+    .page.active { display: flex; flex-direction: column; }
+    .page-scroll { flex: 1; overflow-y: auto; padding: 24px; }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .card + .card { margin-top: 16px; }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      transition: all 0.15s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-success { background: var(--secondary); color: #fff; }
+    .btn-success:hover { background: #0DA271; }
+    .btn-ghost {
+      background: var(--surface-highlight);
+      border: 1px solid var(--surface-border);
+      color: var(--text-secondary);
+    }
+    .btn-ghost:hover { border-color: var(--primary-light); color: var(--primary-light); }
+    .btn-danger { background: var(--error-bg); border: 1px solid var(--error-border); color: var(--error); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .btn-full { width: 100%; }
+
+    /* ===== PROGRESS BAR ===== */
+    .progress-wrap { background: var(--surface-highlight); border-radius: 99px; overflow: hidden; }
+    .progress-bar { height: 100%; border-radius: 99px; transition: width 0.3s ease; }
+    .progress-bar-primary { background: linear-gradient(90deg, var(--primary), var(--primary-light)); }
+    .progress-bar-success { background: linear-gradient(90deg, var(--secondary), var(--secondary-light)); }
+
+    /* ===== BADGE / PILL ===== */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .badge-primary { background: rgba(99,102,241,0.15); color: var(--primary-light); }
+    .badge-success { background: var(--success-bg); color: var(--secondary); }
+    .badge-warning { background: var(--warning-bg); color: var(--accent); }
+    .badge-muted { background: var(--surface-highlight); color: var(--text-muted); }
+
+    /* ===== TAG ===== */
+    .tag { font-size: 10px; font-weight: 800; letter-spacing: 0.5px; color: var(--primary-light); }
+
+    /* ===== SECTION HEADER ===== */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .section-title { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+    .section-label { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 12px; }
+
+    /* =========================================
+       PAGE 1 — HOME
+    ========================================= */
+    .home-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    @media (max-width: 800px) { .home-grid { grid-template-columns: 1fr; } }
+
+    .home-left, .home-right { display: flex; flex-direction: column; gap: 16px; }
+
+    .greeting h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+    .greeting p { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+
+    .continue-card {
+      background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(129,140,248,0.05));
+      border: 1px solid rgba(99,102,241,0.3);
+    }
+    .continue-badge { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+    .continue-badge-text { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; color: var(--primary-light); }
+    .continue-lesson-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .continue-lesson-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
+    .progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .progress-pct { font-size: 12px; color: var(--text-secondary); white-space: nowrap; font-weight: 700; }
+
+    .challenge-card { border-color: rgba(245,158,11,0.25); }
+    .challenge-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .challenge-title { font-size: 16px; font-weight: 700; }
+    .challenge-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px; }
+    .challenge-footer { display: flex; justify-content: space-between; align-items: center; }
+    .solve-link {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary-light);
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+    .solve-link:hover { color: var(--primary); }
+
+    .practice-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+    .practice-pill {
+      padding: 10px 16px;
+      background: var(--surface-highlight);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--secondary-light);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .practice-pill:hover { border-color: var(--secondary); background: rgba(16,185,129,0.08); }
+
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .stat-box {
+      padding: 16px;
+      border-radius: var(--radius);
+      text-align: center;
+    }
+    .stat-box-val { font-size: 22px; font-weight: 800; margin: 6px 0 2px; }
+    .stat-box-lbl { font-size: 12px; color: var(--text-muted); }
+
+    /* =========================================
+       PAGE 2 — LEARN (Journey Map)
+    ========================================= */
+    .learn-layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    @media (max-width: 900px) { .learn-layout { grid-template-columns: 1fr; } }
+
+    .journey-path { display: flex; flex-direction: column; gap: 0; }
+    .journey-node {
+      display: flex;
+      gap: 14px;
+      position: relative;
+    }
+    .journey-node:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 24px;
+      top: 54px;
+      width: 3px;
+      height: calc(100% - 8px);
+      border-radius: 2px;
+      z-index: 0;
+    }
+    .journey-node.completed::before { background: var(--secondary); }
+    .journey-node.current::before { background: var(--primary); opacity: 0.4; }
+    .journey-node.locked::before { background: var(--surface-border); }
+
+    .node-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      border: 3px solid;
+      flex-shrink: 0;
+      z-index: 1;
+      margin-top: 8px;
+      transition: transform 0.15s;
+    }
+    .node-circle:hover { transform: scale(1.08); }
+    .node-circle.completed { background: var(--secondary); border-color: var(--secondary-light); }
+    .node-circle.current { background: var(--primary); border-color: var(--primary-light); cursor: pointer; }
+    .node-circle.locked { background: var(--surface); border-color: var(--surface-border); cursor: not-allowed; }
+
+    .topic-card {
+      flex: 1;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--surface-border);
+      background: var(--surface);
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .topic-card:hover:not(.locked) { border-color: var(--primary-light); }
+    .topic-card.current { border-color: var(--primary); background: rgba(99,102,241,0.07); }
+    .topic-card.locked { opacity: 0.55; cursor: not-allowed; }
+    .topic-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .topic-title { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .topic-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+    .topic-progress { margin-top: 10px; }
+    .topic-progress-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .topic-progress-lbl { font-size: 11px; color: var(--text-muted); }
+
+    /* Lesson Panel (right column) */
+    .lesson-panel { position: sticky; top: 0; }
+    .lesson-panel-empty { 
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 300px; text-align: center; gap: 12px; color: var(--text-muted);
+    }
+    .lesson-panel-empty .big-icon { font-size: 48px; opacity: 0.5; }
+
+    /* =========================================
+       PAGE 3 — SQL LAB
+    ========================================= */
+    .lab-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 0;
+      height: 100%;
+    }
+    @media (max-width: 900px) { .lab-layout { grid-template-columns: 1fr; } }
+
+    /* Sidebar */
+    .lab-sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--surface-border);
+      padding: 16px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .db-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--surface-border);
+      margin-bottom: 14px;
+    }
+    .db-name { font-size: 14px; font-weight: 800; }
+    .engine-badge {
+      padding: 2px 6px;
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--secondary);
+    }
+    .table-list { display: flex; flex-direction: column; gap: 2px; }
+    .table-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.12s;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+    }
+    .table-item:hover { background: var(--surface-highlight); color: var(--text-primary); }
+    .table-item.active { background: rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.25); color: var(--primary-light); }
+    .table-item-left { display: flex; align-items: center; gap: 8px; }
+    .table-row-count { font-size: 11px; color: var(--text-muted); }
+    .schema-detail { margin-top: 14px; }
+    .schema-detail-header { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 10px; }
+    .col-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .col-left { display: flex; align-items: center; gap: 6px; }
+    .col-name { font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+    .col-type { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--editor-keyword); }
+    .key-badge { padding: 1px 5px; border-radius: 4px; font-size: 9px; font-weight: 800; }
+    .key-badge.pk { background: var(--warning-bg); color: var(--accent); }
+    .key-badge.fk { background: rgba(99,102,241,0.15); color: var(--primary-light); }
+    .sample-query-btn {
+      width: 100%;
+      margin-top: 12px;
+      padding: 8px;
+      background: rgba(99,102,241,0.1);
+      border: 1px solid rgba(99,102,241,0.2);
+      border-radius: var(--radius-sm);
+      color: var(--primary-light);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .sample-query-btn:hover { background: rgba(99,102,241,0.2); }
+
+    /* Editor area */
+    .lab-main { display: flex; flex-direction: column; overflow: hidden; }
+    .lab-tabs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--surface-border);
+    }
+    .lab-tab {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: transparent;
+      transition: all 0.12s;
+    }
+    .lab-tab:hover { color: var(--text-secondary); background: var(--surface-highlight); }
+    .lab-tab.active { background: var(--primary); color: #fff; }
+
+    .lab-content { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+    /* SQL Editor */
+    .editor-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); overflow: hidden; }
+    .editor-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--surface-highlight);
+      border-bottom: 1px solid var(--surface-border);
+    }
+    .editor-title { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; color: var(--primary-light); }
+    .editor-actions { display: flex; gap: 8px; }
+    .editor-action-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .editor-action-btn:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
+    #sql-editor {
+      width: 100%;
+      min-height: 140px;
+      background: var(--editor-bg);
+      color: var(--editor-text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      padding: 14px;
+      border: none;
+      resize: vertical;
+      tab-size: 2;
+    }
+
+    /* SQL Keyword Toolbar */
+    .sql-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--surface-highlight);
+      border-top: 1px solid var(--surface-border);
+      flex-wrap: wrap;
+    }
+    .sql-keyword {
+      padding: 4px 10px;
+      background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.2);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--editor-keyword);
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .sql-keyword:hover { background: rgba(56,189,248,0.2); }
+    .sql-toolbar-sep { width: 1px; height: 18px; background: var(--surface-border); }
+
+    /* Run button */
+    .run-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--secondary), #0DA271);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 4px 20px rgba(16,185,129,0.25);
+    }
+    .run-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(16,185,129,0.35); }
+    .run-btn:active { transform: scale(0.98); }
+
+    /* Results */
+    .result-container { border: 1px solid var(--surface-border); border-radius: var(--radius); overflow: hidden; }
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--surface-highlight);
+      border-bottom: 1px solid var(--surface-border);
+    }
+    .result-title { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; color: var(--secondary); }
+    .result-meta { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--text-muted); }
+    .result-table-wrap { overflow-x: auto; }
+    .result-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .result-table th {
+      padding: 10px 14px;
+      background: var(--surface-highlight);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-align: left;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--surface-border);
+    }
+    .result-table td {
+      padding: 9px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+    .result-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .result-table tr:last-child td { border-bottom: none; }
+
+    /* Error Banner */
+    .error-banner {
+      padding: 14px 16px;
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .error-message { font-size: 14px; font-weight: 600; color: var(--error); }
+    .error-hint { font-size: 13px; color: var(--text-secondary); }
+    .error-fix-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      border-radius: 8px;
+      color: var(--error);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.12s;
+      align-self: flex-start;
+      margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .error-fix-btn:hover { background: rgba(239,68,68,0.2); }
+
+    /* History items */
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.12s;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+    .history-item:hover { border-color: var(--primary-light); background: rgba(99,102,241,0.05); }
+
+    /* =========================================
+       PAGE 4 — CHALLENGES
+    ========================================= */
+    .challenges-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 800px) { .challenges-layout { grid-template-columns: 1fr; } }
+
+    .daily-banner {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(251,191,36,0.04));
+      border: 1px solid rgba(245,158,11,0.3);
+      padding: 22px;
+    }
+    .daily-banner-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .daily-title { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+    .daily-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px; }
+
+    .challenge-card-item {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius);
+      padding: 16px;
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+    .challenge-card-item:hover { border-color: var(--primary-light); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+    .challenge-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .challenge-card-title { font-size: 15px; font-weight: 700; }
+    .challenge-card-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px; }
+    .challenge-card-footer { display: flex; justify-content: space-between; align-items: center; }
+
+    .done-badge { display: flex; align-items: center; gap: 4px; color: var(--secondary); font-size: 12px; font-weight: 700; }
+
+    /* =========================================
+       PAGE 5 — PROFILE
+    ========================================= */
+    .profile-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 800px) { .profile-layout { grid-template-columns: 1fr; } }
+
+    .profile-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .avatar {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .user-name { font-size: 22px; font-weight: 800; }
+    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    @media (max-width: 600px) { .metrics-grid { grid-template-columns: 1fr 1fr; } }
+    .metric-box { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 16px; text-align: center; }
+    .metric-val { font-size: 22px; font-weight: 800; margin: 6px 0 3px; }
+    .metric-lbl { font-size: 12px; color: var(--text-muted); }
+
+    .mastery-item + .mastery-item { margin-top: 14px; }
+    .mastery-label-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .mastery-topic { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; }
+    .mastery-pct { font-size: 13px; font-weight: 700; color: var(--primary-light); }
+
+    .badge-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--surface-highlight);
+      border-radius: 10px;
+    }
+    .badge-item + .badge-item { margin-top: 10px; }
+    .badge-icon { font-size: 24px; }
+    .badge-title { font-size: 14px; font-weight: 700; }
+    .badge-desc { font-size: 12px; color: var(--text-muted); }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.12s;
+    }
+    .setting-row:hover { border-color: var(--primary-light); }
+    .setting-row + .setting-row { margin-top: 8px; }
+
+    /* =========================================
+       LESSON OVERLAY
+    ========================================= */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 999;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .overlay.show { display: flex; }
+    @media (min-width: 700px) {
+      .overlay { align-items: center; }
+      .overlay-panel { border-radius: var(--radius-lg) !important; max-width: 620px !important; }
+    }
+    .overlay-panel {
+      background: var(--surface);
+      border-top: 1px solid var(--surface-border);
+      border-top-left-radius: var(--radius-lg);
+      border-top-right-radius: var(--radius-lg);
+      padding: 24px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .overlay-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .overlay-close {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--surface-highlight);
+      border: none;
+      color: var(--text-secondary);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .overlay-close:hover { background: var(--surface-border); }
+
+    /* =========================================
+       LESSON VIEW (inside overlay or full page)
+    ========================================= */
+    .lesson-view { display: flex; flex-direction: column; gap: 16px; }
+    .lesson-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--surface-border);
+    }
+    .lesson-back {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: none; color: var(--text-secondary);
+      font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    .lesson-back:hover { color: var(--text-primary); }
+
+    .step-indicator { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--surface-border); }
+    .step-dot.active { background: var(--primary); }
+    .step-dot.done { background: var(--secondary); }
+
+    .concept-section { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 20px; }
+    .concept-tag { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; color: var(--primary-light); margin-bottom: 8px; }
+    .concept-title { font-size: 20px; font-weight: 800; margin-bottom: 10px; }
+    .concept-text { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+    .code-block {
+      background: var(--editor-bg);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      margin: 12px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--editor-keyword);
+      line-height: 1.6;
+    }
+    .code-explanation { font-size: 13px; color: var(--text-muted); line-height: 1.7; white-space: pre-line; }
+
+    .options-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+    .option-btn {
+      padding: 14px;
+      background: var(--surface-highlight);
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
+      text-align: left;
+      font-size: 14px;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.12s;
+      font-family: 'Inter', sans-serif;
+    }
+    .option-btn:hover { border-color: var(--primary-light); }
+    .option-btn.selected { border-color: var(--primary); background: rgba(99,102,241,0.12); color: var(--primary-light); font-weight: 700; }
+
+    .feedback-box { padding: 14px; border-radius: 10px; font-size: 13px; font-weight: 600; }
+    .feedback-success { background: var(--success-bg); border: 1px solid var(--success-border); color: var(--secondary); }
+    .feedback-error { background: var(--error-bg); border: 1px solid var(--error-border); color: var(--error); }
+
+    .lesson-footer {
+      position: sticky;
+      bottom: 0;
+      padding-top: 16px;
+      background: var(--surface);
+      border-top: 1px solid var(--surface-border);
+      margin-top: 8px;
+    }
+
+    /* =========================================
+       UTILITY
+    ========================================= */
+    .hidden { display: none !important; }
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .gap-4 { gap: 4px; }
+    .gap-8 { gap: 8px; }
+    .gap-12 { gap: 12px; }
+    .gap-16 { gap: 16px; }
+    .mb-4 { margin-bottom: 4px; }
+    .mb-8 { margin-bottom: 8px; }
+    .mb-12 { margin-bottom: 12px; }
+    .mb-16 { margin-bottom: 16px; }
+    .mt-8 { margin-top: 8px; }
+    .mt-12 { margin-top: 12px; }
+    .mt-16 { margin-top: 16px; }
+    .fw-700 { font-weight: 700; }
+    .fw-800 { font-weight: 800; }
+    .fs-12 { font-size: 12px; }
+    .fs-13 { font-size: 13px; }
+    .text-muted { color: var(--text-muted); }
+    .text-secondary { color: var(--text-secondary); }
+    .text-success { color: var(--secondary); }
+    .text-accent { color: var(--accent); }
+    .text-primary-color { color: var(--primary-light); }
+
+    /* Animations */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.2s ease; }
+
+    /* ===== GLOWING EFFECTS ===== */
+    .glow-primary { box-shadow: 0 0 20px rgba(99,102,241,0.2); }
+    .glow-success { box-shadow: 0 0 20px rgba(16,185,129,0.2); }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-logo">
+      <div class="header-logo-icon">⚡</div>
+      <div class="header-logo-text">Query<span>Quest</span></div>
+    </div>
+    <div class="header-stats">
+      <div class="stat-chip streak"><span class="icon">🔥</span> <span id="hdr-streak">8 Days</span></div>
+      <div class="stat-chip xp"><span class="icon">⚡</span> <span id="hdr-xp">2,450 XP</span></div>
+      <div class="stat-chip level"><span class="icon">🏆</span> <span id="hdr-level">Query Explorer</span></div>
+    </div>
+  </header>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <button class="nav-btn active" data-page="home" onclick="navigate('home')"><span class="nav-icon">🏠</span> Home</button>
+    <button class="nav-btn" data-page="learn" onclick="navigate('learn')"><span class="nav-icon">📚</span> Learn</button>
+    <button class="nav-btn" data-page="lab" onclick="navigate('lab')"><span class="nav-icon">💻</span> SQL Lab</button>
+    <button class="nav-btn" data-page="challenges" onclick="navigate('challenges')"><span class="nav-icon">🏆</span> Challenges</button>
+    <button class="nav-btn" data-page="profile" onclick="navigate('profile')"><span class="nav-icon">👤</span> Profile</button>
+  </nav>
+
+  <!-- ===== PAGE: HOME ===== -->
+  <div class="page active" id="page-home">
+    <div class="page-scroll">
+      <div class="home-grid">
+        <div class="home-left">
+
+          <!-- Greeting -->
+          <div class="greeting">
+            <h1>Welcome back, Alex 👋</h1>
+            <p>Ready to master your SQL queries today?</p>
+          </div>
+
+          <!-- Continue Learning -->
+          <div class="card continue-card">
+            <div class="continue-badge">
+              <span>✨</span>
+              <span class="continue-badge-text">CURRENT LESSON</span>
+            </div>
+            <div class="continue-lesson-title">Filtering Data (WHERE)</div>
+            <div class="continue-lesson-sub">Lesson 4 of 5 • Comparison &amp; Logic Operators</div>
+            <div class="progress-row">
+              <div class="progress-wrap" style="flex:1; height:8px;">
+                <div class="progress-bar progress-bar-primary" style="width:80%"></div>
+              </div>
+              <span class="progress-pct">80%</span>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="navigate('learn')">▶ CONTINUE LESSON</button>
+          </div>
+
+          <!-- Daily Challenge -->
+          <div>
+            <div class="section-header">
+              <span>🔥</span>
+              <span class="section-title">Daily SQL Challenge</span>
+            </div>
+            <div class="card challenge-card" onclick="navigate('challenges')" style="cursor:pointer">
+              <div class="challenge-header">
+                <span class="challenge-title">Top Performing CSE Students</span>
+                <span class="badge badge-warning">+50 XP</span>
+              </div>
+              <div class="challenge-desc">Find the name and CGPA of all students in Computer Science (dept 101) with CGPA ≥ 8.0 sorted by CGPA descending.</div>
+              <div class="challenge-footer">
+                <span class="badge badge-muted">Intermediate</span>
+                <button class="solve-link" onclick="event.stopPropagation(); navigate('challenges')">Solve Challenge →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Practice -->
+          <div>
+            <div class="section-header">
+              <span>⌨️</span>
+              <span class="section-title">Quick Practice</span>
+            </div>
+            <div class="practice-grid">
+              <button class="practice-pill" onclick="openLabWithQuery('SELECT * FROM students;')">SELECT</button>
+              <button class="practice-pill" onclick="openLabWithQuery('SELECT * FROM students\nWHERE cgpa >= 8.0;')">WHERE</button>
+              <button class="practice-pill" onclick="openLabWithQuery('SELECT s.name, d.name AS dept\nFROM students s\nJOIN departments d ON s.department_id = d.id;')">JOIN</button>
+              <button class="practice-pill" onclick="openLabWithQuery('SELECT department_id, COUNT(*) AS total\nFROM students\nGROUP BY department_id;')">GROUP BY</button>
+              <button class="practice-pill" onclick="openLabWithQuery('SELECT AVG(cgpa) AS avg_cgpa,\n       MAX(cgpa) AS max_cgpa\nFROM students;')">AGGREGATE</button>
+              <button class="practice-pill" onclick="openLabWithQuery('SELECT * FROM courses\nORDER BY credits DESC;')">ORDER BY</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="home-right">
+
+          <!-- Your Progress -->
+          <div class="section-header"><span>📊</span><span class="section-title">Your Progress</span></div>
+          <div class="stats-row">
+            <div class="card stat-box">
+              <span style="font-size:22px">🔥</span>
+              <div class="stat-box-val" style="color:var(--accent)">8</div>
+              <div class="stat-box-lbl">Day Streak</div>
+            </div>
+            <div class="card stat-box">
+              <span style="font-size:22px">⚡</span>
+              <div class="stat-box-val" style="color:var(--secondary)">2,450</div>
+              <div class="stat-box-lbl">Total XP</div>
+            </div>
+            <div class="card stat-box">
+              <span style="font-size:22px">🛡️</span>
+              <div class="stat-box-val" style="color:var(--primary-light)">146</div>
+              <div class="stat-box-lbl">Queries Run</div>
+            </div>
+            <div class="card stat-box">
+              <span style="font-size:22px">✅</span>
+              <div class="stat-box-val" style="color:var(--secondary)">32</div>
+              <div class="stat-box-lbl">Challenges</div>
+            </div>
+          </div>
+
+          <!-- Topic Mastery -->
+          <div class="card" style="margin-top:16px">
+            <div class="section-label">TOPIC MASTERY</div>
+            <div id="home-mastery"></div>
+          </div>
+
+          <!-- Quick Stats -->
+          <div class="card">
+            <div class="section-label">CURRICULUM PROGRESS</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <span style="font-size:14px; font-weight:700">Topics Mastered</span>
+              <span style="font-size:14px; font-weight:800; color:var(--secondary)">18 / 25</span>
+            </div>
+            <div class="progress-wrap" style="height:10px">
+              <div class="progress-bar progress-bar-success" style="width:72%"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: LEARN ===== -->
+  <div class="page" id="page-learn">
+    <div class="page-scroll">
+      <div class="learn-layout">
+        <!-- Left: Journey Path -->
+        <div>
+          <h2 style="font-size:24px; font-weight:800; margin-bottom:6px;">SQL Journey</h2>
+          <p style="font-size:13px; color:var(--text-secondary); margin-bottom:24px;">Follow the structured path to database mastery</p>
+          <div class="journey-path" id="journey-path"></div>
+        </div>
+
+        <!-- Right: Lesson Panel -->
+        <div class="lesson-panel" id="lesson-panel">
+          <div class="lesson-panel-empty" id="lesson-panel-empty">
+            <div class="big-icon">🗺️</div>
+            <div style="font-size:16px; font-weight:700; color:var(--text-secondary)">Select a topic to begin</div>
+            <div style="font-size:13px">Click any active or in-progress node on the path to view its lessons.</div>
+          </div>
+          <div id="lesson-panel-content" class="hidden"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: SQL LAB ===== -->
+  <div class="page" id="page-lab">
+    <div class="lab-layout" style="height:100%">
+
+      <!-- Sidebar -->
+      <div class="lab-sidebar">
+        <div class="db-header">
+          <span>🗄️</span>
+          <span class="db-name">College Database</span>
+          <span class="engine-badge">PostgreSQL</span>
+        </div>
+        <div class="section-label">TABLES</div>
+        <div class="table-list" id="table-list"></div>
+        <div class="schema-detail" id="schema-detail"></div>
+      </div>
+
+      <!-- Main Editor Area -->
+      <div class="lab-main">
+        <!-- Tabs -->
+        <div class="lab-tabs">
+          <button class="lab-tab active" data-tab="editor" onclick="switchLabTab('editor')">✏️ Editor</button>
+          <button class="lab-tab" data-tab="history" onclick="switchLabTab('history')">🕐 History</button>
+        </div>
+
+        <!-- Editor Tab -->
+        <div class="lab-content" id="lab-tab-editor">
+          <div class="editor-card">
+            <div class="editor-topbar">
+              <span class="editor-title">SQL EDITOR</span>
+              <div class="editor-actions">
+                <button class="editor-action-btn" onclick="clearEditor()">↺ Clear</button>
+                <button class="editor-action-btn" onclick="copyQuery()">⎘ Copy</button>
+              </div>
+            </div>
+            <textarea id="sql-editor" spellcheck="false" placeholder="Write your SQL query here...
+  
+  Example:
+  SELECT name, cgpa
+  FROM students
+  WHERE cgpa >= 8.5
+  ORDER BY cgpa DESC;"></textarea>
+            <div class="sql-toolbar">
+              <button class="sql-keyword" onclick="insertKeyword('SELECT ')">SELECT</button>
+              <button class="sql-keyword" onclick="insertKeyword('FROM ')">FROM</button>
+              <button class="sql-keyword" onclick="insertKeyword('WHERE ')">WHERE</button>
+              <div class="sql-toolbar-sep"></div>
+              <button class="sql-keyword" onclick="insertKeyword('JOIN ')">JOIN</button>
+              <button class="sql-keyword" onclick="insertKeyword('ON ')">ON</button>
+              <div class="sql-toolbar-sep"></div>
+              <button class="sql-keyword" onclick="insertKeyword('GROUP BY ')">GROUP BY</button>
+              <button class="sql-keyword" onclick="insertKeyword('ORDER BY ')">ORDER BY</button>
+              <button class="sql-keyword" onclick="insertKeyword('LIMIT ')">LIMIT</button>
+              <div class="sql-toolbar-sep"></div>
+              <button class="sql-keyword" onclick="insertKeyword('= ')">= </button>
+              <button class="sql-keyword" onclick="insertKeyword(', ')">,</button>
+              <button class="sql-keyword" onclick="insertKeyword(';')">;</button>
+            </div>
+          </div>
+          <button class="run-btn" onclick="runQuery()">▶ RUN QUERY</button>
+          <div id="result-area"></div>
+        </div>
+
+        <!-- History Tab -->
+        <div class="lab-content hidden" id="lab-tab-history">
+          <div class="section-label">RECENT QUERIES</div>
+          <div id="history-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: CHALLENGES ===== -->
+  <div class="page" id="page-challenges">
+    <div class="page-scroll">
+      <div style="max-width:1100px; margin:0 auto;">
+        <h2 style="font-size:24px; font-weight:800; margin-bottom:4px;">SQL Challenges</h2>
+        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:24px;">Test your query skills against real engineering problems</p>
+
+        <!-- Daily Banner -->
+        <div class="card daily-banner mb-16">
+          <div class="daily-banner-top">
+            <div>
+              <span class="badge badge-warning">🔥 FEATURED DAILY</span>
+            </div>
+            <span style="font-size:16px; font-weight:800; color:var(--accent)">+50 XP</span>
+          </div>
+          <div class="daily-title">Top Performing CSE Students</div>
+          <div class="daily-desc">Find the name and CGPA of all students in Computer Science (department_id = 101) with CGPA ≥ 8.0 sorted by CGPA descending.</div>
+          <button class="btn btn-primary" onclick="startChallenge('-- Top Performing CSE Students\nSELECT name, cgpa\nFROM students\nWHERE department_id = 101 AND cgpa >= 8.0\nORDER BY cgpa DESC;')">⚡ START DAILY CHALLENGE</button>
+        </div>
+
+        <div class="section-label mb-12">ALL PRACTICE CHALLENGES</div>
+        <div class="challenges-layout" id="challenge-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: PROFILE ===== -->
+  <div class="page" id="page-profile">
+    <div class="page-scroll">
+      <div class="profile-layout">
+        <div style="display:flex; flex-direction:column; gap:16px;">
+
+          <!-- User Card -->
+          <div class="card profile-card">
+            <div class="avatar">AK</div>
+            <div>
+              <div class="user-name">Alex Kumar</div>
+              <div class="badge badge-primary mt-8">🏆 Query Explorer</div>
+            </div>
+          </div>
+
+          <!-- Metrics -->
+          <div class="metrics-grid">
+            <div class="metric-box">
+              <div style="font-size:22px">🔥</div>
+              <div class="metric-val" style="color:var(--accent)">8 Days</div>
+              <div class="metric-lbl">Streak</div>
+            </div>
+            <div class="metric-box">
+              <div style="font-size:22px">⚡</div>
+              <div class="metric-val" style="color:var(--secondary)">2,450</div>
+              <div class="metric-lbl">Total XP</div>
+            </div>
+            <div class="metric-box">
+              <div style="font-size:22px">🛡️</div>
+              <div class="metric-val" style="color:var(--primary-light)">146</div>
+              <div class="metric-lbl">Queries Run</div>
+            </div>
+            <div class="metric-box">
+              <div style="font-size:22px">✅</div>
+              <div class="metric-val" style="color:var(--secondary)">32</div>
+              <div class="metric-lbl">Challenges</div>
+            </div>
+            <div class="metric-box">
+              <div style="font-size:22px">🎓</div>
+              <div class="metric-val" style="color:var(--primary-light)">18/25</div>
+              <div class="metric-lbl">Topics Done</div>
+            </div>
+          </div>
+
+          <!-- Settings -->
+          <div>
+            <div class="section-label mb-12">SETTINGS</div>
+            <div class="setting-row">⚙️ <span>Account Settings</span></div>
+            <div class="setting-row" style="border-color:rgba(239,68,68,0.2); color:var(--error)">🚪 <span>Log Out</span></div>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <!-- Mastery -->
+          <div class="card">
+            <div class="section-label">TOPIC MASTERY</div>
+            <div id="profile-mastery"></div>
+          </div>
+
+          <!-- Achievements -->
+          <div class="card">
+            <div class="section-label">ACHIEVEMENTS</div>
+            <div id="profile-badges"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LESSON OVERLAY ===== -->
+  <div class="overlay" id="lesson-overlay" onclick="closeOverlayIfBg(event)">
+    <div class="overlay-panel" id="overlay-panel">
+      <div id="overlay-content"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// =============================================
+// DATA
+// =============================================
+const COLLEGE_DB = {
+  name: 'College Database',
+  tables: [
+    {
+      name: 'students', rowCount: 5,
+      columns: [
+        { name: 'id', type: 'INTEGER', isPk: true },
+        { name: 'name', type: 'TEXT' },
+        { name: 'age', type: 'INTEGER' },
+        { name: 'gender', type: 'TEXT' },
+        { name: 'department_id', type: 'INTEGER', isFk: true },
+        { name: 'email', type: 'TEXT' },
+        { name: 'cgpa', type: 'NUMERIC' },
+      ],
+      data: [
+        { id:1, name:'Rahul Sharma', age:20, gender:'Male', department_id:101, email:'rahul@college.edu', cgpa:8.7 },
+        { id:2, name:'Ananya Verma', age:21, gender:'Female', department_id:102, email:'ananya@college.edu', cgpa:9.1 },
+        { id:3, name:'Arjun Patel', age:19, gender:'Male', department_id:101, email:'arjun@college.edu', cgpa:7.9 },
+        { id:4, name:'Priya Nair', age:22, gender:'Female', department_id:103, email:'priya@college.edu', cgpa:8.9 },
+        { id:5, name:'Siddharth Rao', age:20, gender:'Male', department_id:102, email:'siddharth@college.edu', cgpa:8.2 },
+      ]
+    },
+    {
+      name: 'departments', rowCount: 3,
+      columns: [
+        { name: 'id', type: 'INTEGER', isPk: true },
+        { name: 'name', type: 'TEXT' },
+        { name: 'hod', type: 'TEXT' },
+        { name: 'location', type: 'TEXT' },
+      ],
+      data: [
+        { id:101, name:'Computer Science', hod:'Dr. A. Gupta', location:'Block A' },
+        { id:102, name:'Electronics & Comm', hod:'Dr. S. Mehta', location:'Block B' },
+        { id:103, name:'Information Tech', hod:'Dr. R. Joshi', location:'Block C' },
+      ]
+    },
+    {
+      name: 'courses', rowCount: 4,
+      columns: [
+        { name: 'id', type: 'INTEGER', isPk: true },
+        { name: 'name', type: 'TEXT' },
+        { name: 'credits', type: 'INTEGER' },
+        { name: 'department_id', type: 'INTEGER', isFk: true },
+      ],
+      data: [
+        { id:301, name:'Database Management', credits:4, department_id:101 },
+        { id:302, name:'Data Structures', credits:4, department_id:101 },
+        { id:303, name:'Digital Signal Processing', credits:3, department_id:102 },
+        { id:304, name:'Web Engineering', credits:3, department_id:103 },
+      ]
+    },
+    {
+      name: 'enrollments', rowCount: 5,
+      columns: [
+        { name: 'id', type: 'INTEGER', isPk: true },
+        { name: 'student_id', type: 'INTEGER', isFk: true },
+        { name: 'course_id', type: 'INTEGER', isFk: true },
+        { name: 'semester', type: 'TEXT' },
+        { name: 'marks', type: 'INTEGER' },
+      ],
+      data: [
+        { id:1, student_id:1, course_id:301, semester:'Sem 4', marks:88 },
+        { id:2, student_id:2, course_id:303, semester:'Sem 6', marks:94 },
+        { id:3, student_id:3, course_id:301, semester:'Sem 4', marks:76 },
+        { id:4, student_id:4, course_id:304, semester:'Sem 8', marks:91 },
+        { id:5, student_id:5, course_id:302, semester:'Sem 4', marks:82 },
+      ]
+    },
+    {
+      name: 'professors', rowCount: 3,
+      columns: [
+        { name: 'id', type: 'INTEGER', isPk: true },
+        { name: 'name', type: 'TEXT' },
+        { name: 'department_id', type: 'INTEGER', isFk: true },
+        { name: 'experience', type: 'INTEGER' },
+      ],
+      data: [
+        { id:1, name:'Dr. A. Gupta', department_id:101, experience:14 },
+        { id:2, name:'Dr. S. Mehta', department_id:102, experience:10 },
+        { id:3, name:'Dr. R. Joshi', department_id:103, experience:8 },
+      ]
+    },
+  ]
+};
+
+const CURRICULUM = [
+  { id:'lvl_0', level:0, title:'Database Fundamentals', desc:'Understand tables, rows, columns, and key concepts.', status:'completed', progress:100, total:3, done:3 },
+  { id:'lvl_1', level:1, title:'SQL Basics (SELECT & FROM)', desc:'Learn how to choose columns and fetch data from tables.', status:'completed', progress:100, total:4, done:4,
+    lessons: [{
+      title: 'Your First SELECT',
+      subtitle: 'Retrieving data from a database table',
+      conceptText: 'Think of a database table like an Excel sheet. SELECT picks the columns you want to view, and FROM specifies which table to look inside.',
+      codeExample: 'SELECT name, age FROM students;',
+      codeExplanation: '• SELECT name, age → columns we want\n• FROM students → table containing data\n• ; → completes the SQL statement',
+      xpReward: 50,
+      exercises: [
+        {
+          type: 'predict',
+          question: 'What will this query return?',
+          codeSnippet: 'SELECT name, cgpa FROM students;',
+          options: [
+            'All columns (id, name, age, gender, email, cgpa)',
+            'Only the "name" and "cgpa" columns for all students',
+            'Only students with CGPA > 8.0',
+          ],
+          correctIdx: 1,
+          explanation: 'SELECT name, cgpa extracts only those two columns for every row in the students table.',
+        },
+        {
+          type: 'write',
+          question: 'Write a SQL query to display the name and email of all students from the students table.',
+          expectedQuery: 'SELECT name, email FROM students;',
+          hints: ['Start with SELECT followed by column names.', 'Use: SELECT name, email FROM students;'],
+          explanation: 'Great job! SELECT name, email FROM students; fetches student names and email addresses.',
+        }
+      ]
+    }]
+  },
+  { id:'lvl_2', level:2, title:'Filtering Data (WHERE)', desc:'Filter specific rows using comparisons, AND, OR, and LIKE.', status:'current', progress:80, total:5, done:4, lessons:[] },
+  { id:'lvl_3', level:3, title:'SQL Functions & Aggregates', desc:'COUNT, SUM, AVG, MIN, MAX, and String helpers.', status:'current', progress:40, total:4, done:2, lessons:[] },
+  { id:'lvl_4', level:4, title:'Grouping Data (GROUP BY)', desc:'Group rows into summary statistics with GROUP BY and HAVING.', status:'locked', progress:0, total:4, done:0, lessons:[] },
+  { id:'lvl_5', level:5, title:'Relational Joins (INNER, LEFT)', desc:'Combine data across multiple tables using foreign keys.', status:'locked', progress:0, total:6, done:0, lessons:[] },
+  { id:'lvl_6', level:6, title:'Subqueries & Nested Queries', desc:'Write scalar, IN, and EXISTS nested queries.', status:'locked', progress:0, total:4, done:0, lessons:[] },
+];
+
+const CHALLENGES = [
+  { id:'ch_1', title:'Top Performing CSE Students', desc:'Find the name and CGPA of all students in Computer Science (department_id = 101) with CGPA ≥ 8.0 sorted by CGPA descending.', difficulty:'Intermediate', xp:50, completed:false,
+    query:'-- Top Performing CSE Students\nSELECT name, cgpa\nFROM students\nWHERE department_id = 101 AND cgpa >= 8.0\nORDER BY cgpa DESC;' },
+  { id:'ch_2', title:'High Credit Courses', desc:'Find all courses offering 4 credits.', difficulty:'Beginner', xp:30, completed:true,
+    query:'-- High Credit Courses\nSELECT name, credits\nFROM courses\nWHERE credits = 4;' },
+  { id:'ch_3', title:'Department Head Count', desc:'Count how many total students belong to department 102.', difficulty:'Intermediate', xp:40, completed:false,
+    query:'-- Department Head Count\nSELECT COUNT(*) AS student_count\nFROM students\nWHERE department_id = 102;' },
+  { id:'ch_4', title:'Student Email Directory', desc:'List all student names and emails ordered alphabetically by name.', difficulty:'Beginner', xp:25, completed:false,
+    query:'-- Student Email Directory\nSELECT name, email\nFROM students\nORDER BY name ASC;' },
+  { id:'ch_5', title:'Department Course List', desc:'Show all courses along with their department ID and credits, sorted by credits.', difficulty:'Beginner', xp:25, completed:false,
+    query:'-- Department Course List\nSELECT name, department_id, credits\nFROM courses\nORDER BY credits DESC;' },
+  { id:'ch_6', title:'Student-Department Join', desc:'List student names with their department names by joining students and departments.', difficulty:'Advanced', xp:70, completed:false,
+    query:'-- Student-Department Join\nSELECT s.name AS student_name, d.name AS department\nFROM students s\nJOIN departments d ON s.department_id = d.id\nORDER BY d.name;' },
+];
+
+const MASTERY = [
+  { topic: 'SELECT', percentage: 95 },
+  { topic: 'WHERE', percentage: 82 },
+  { topic: 'GROUP BY', percentage: 61 },
+  { topic: 'JOINS', percentage: 43 },
+  { topic: 'SUBQUERIES', percentage: 18 },
+];
+
+const ACHIEVEMENTS = [
+  { icon: '⚡', title: 'First Query', desc: 'Executed 1st SQL statement' },
+  { icon: '✅', title: 'SELECT Master', desc: 'Completed SELECT module' },
+  { icon: '🧙', title: 'WHERE Wizard', desc: 'Passed filtering quiz' },
+  { icon: '🔥', title: '8 Day Streak', desc: '8 days of daily SQL practice' },
+];
+
+// =============================================
+// STATE
+// =============================================
+let selectedTableIdx = 0;
+let queryHistory = [
+  'SELECT * FROM students;',
+  'SELECT name, email FROM students WHERE department_id = 101;',
+  'SELECT * FROM courses;',
+];
+let activeLabTab = 'editor';
+let lessonState = null; // { lessonIdx, stepIndex, selectedOption, feedback }
+let selectedTopicForLesson = null;
+
+// =============================================
+// NAVIGATION
+// =============================================
+function navigate(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  const btn = document.querySelector(`.nav-btn[data-page="${pageId}"]`);
+  if (page) { page.classList.add('active'); page.classList.add('fade-in'); }
+  if (btn) btn.classList.add('active');
+
+  if (pageId === 'lab') renderLab();
+  if (pageId === 'learn') renderLearn();
+  if (pageId === 'challenges') renderChallenges();
+}
+
+function openLabWithQuery(q) {
+  document.getElementById('sql-editor').value = q;
+  navigate('lab');
+}
+
+function startChallenge(q) {
+  document.getElementById('sql-editor').value = q;
+  navigate('lab');
+}
+
+// =============================================
+// HOME PAGE
+// =============================================
+function renderHomeMastery() {
+  const el = document.getElementById('home-mastery');
+  el.innerHTML = MASTERY.map(m => `
+    <div class="mastery-item">
+      <div class="mastery-label-row">
+        <span class="mastery-topic">${m.topic}</span>
+        <span class="mastery-pct">${m.percentage}%</span>
+      </div>
+      <div class="progress-wrap" style="height:6px">
+        <div class="progress-bar progress-bar-primary" style="width:${m.percentage}%"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// =============================================
+// PROFILE PAGE
+// =============================================
+function renderProfile() {
+  const mastery = document.getElementById('profile-mastery');
+  mastery.innerHTML = MASTERY.map(m => `
+    <div class="mastery-item">
+      <div class="mastery-label-row">
+        <span class="mastery-topic">${m.topic}</span>
+        <span class="mastery-pct">${m.percentage}%</span>
+      </div>
+      <div class="progress-wrap" style="height:6px">
+        <div class="progress-bar progress-bar-primary" style="width:${m.percentage}%"></div>
+      </div>
+    </div>
+  `).join('');
+
+  const badges = document.getElementById('profile-badges');
+  badges.innerHTML = ACHIEVEMENTS.map(a => `
+    <div class="badge-item">
+      <div class="badge-icon">${a.icon}</div>
+      <div>
+        <div class="badge-title">${a.title}</div>
+        <div class="badge-desc">${a.desc}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// =============================================
+// CHALLENGES PAGE
+// =============================================
+function renderChallenges() {
+  const list = document.getElementById('challenge-list');
+  list.innerHTML = CHALLENGES.map(c => `
+    <div class="challenge-card-item card" onclick="startChallenge(\`${c.query.replace(/`/g, '\\`')}\`)">
+      <div class="challenge-card-header">
+        <span class="challenge-card-title">${c.title}</span>
+        ${c.completed
+          ? `<span class="done-badge">✓ Completed</span>`
+          : `<span class="badge badge-warning">+${c.xp} XP</span>`
+        }
+      </div>
+      <div class="challenge-card-desc">${c.desc}</div>
+      <div class="challenge-card-footer">
+        <span class="badge badge-muted">${c.difficulty}</span>
+        <span style="font-size:13px; font-weight:700; color:var(--primary-light)">Solve →</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// =============================================
+// LEARN PAGE
+// =============================================
+function renderLearn() {
+  const path = document.getElementById('journey-path');
+  path.innerHTML = CURRICULUM.map((topic, idx) => {
+    const isCompleted = topic.status === 'completed';
+    const isCurrent = topic.status === 'current';
+    const isLocked = topic.status === 'locked';
+    const nodeClass = isCompleted ? 'completed' : isCurrent ? 'current' : 'locked';
+    const nodeEmoji = isCompleted ? '✓' : isCurrent ? '▶' : '🔒';
+    const inProgressBadge = isCurrent ? `<span class="badge badge-primary" style="font-size:9px;">IN PROGRESS</span>` : '';
+
+    return `
+      <div class="journey-node ${nodeClass}">
+        <div class="node-circle ${nodeClass}" 
+          style="${isLocked ? 'font-size:16px' : ''}"
+          onclick="${!isLocked ? `selectTopic(${idx})` : ''}"
+        >${nodeEmoji}</div>
+        <div class="topic-card ${isCurrent ? 'current' : ''} ${isLocked ? 'locked' : ''}" 
+          onclick="${!isLocked ? `selectTopic(${idx})` : ''}">
+          <div class="topic-card-header">
+            <span class="tag">LEVEL ${topic.level}</span>
+            ${inProgressBadge}
+          </div>
+          <div class="topic-title">${topic.title}</div>
+          <div class="topic-desc">${topic.desc}</div>
+          ${!isLocked ? `
+            <div class="topic-progress">
+              <div class="topic-progress-row">
+                <span class="topic-progress-lbl">${topic.done}/${topic.total} Lessons</span>
+              </div>
+              <div class="progress-wrap" style="height:5px">
+                <div class="progress-bar ${isCompleted ? 'progress-bar-success' : 'progress-bar-primary'}" style="width:${topic.progress}%"></div>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectTopic(idx) {
+  const topic = CURRICULUM[idx];
+  selectedTopicForLesson = topic;
+  const panelEmpty = document.getElementById('lesson-panel-empty');
+  const panelContent = document.getElementById('lesson-panel-content');
+
+  panelEmpty.classList.add('hidden');
+  panelContent.classList.remove('hidden');
+
+  const lessons = topic.lessons || [];
+  const hasLessons = lessons.length > 0;
+
+  panelContent.innerHTML = `
+    <div class="card fade-in">
+      <div class="tag mb-4">LEVEL ${topic.level}</div>
+      <div style="font-size:20px; font-weight:800; margin-bottom:6px;">${topic.title}</div>
+      <div style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">${topic.desc}</div>
+
+      <div class="section-label">LESSONS IN THIS TOPIC</div>
+      ${hasLessons
+        ? lessons.map((lesson, li) => `
+            <div class="badge-item" style="cursor:pointer; border:1px solid var(--surface-border); margin-top:8px;"
+              onclick="startLesson(${idx}, ${li})">
+              <div style="width:36px;height:36px;background:rgba(99,102,241,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">📖</div>
+              <div style="flex:1">
+                <div style="font-size:14px;font-weight:700">${lesson.title}</div>
+                <div style="font-size:12px;color:var(--text-muted)">${lesson.subtitle}</div>
+              </div>
+              <span style="font-size:12px;font-weight:700;color:var(--secondary)">+${lesson.xpReward} XP</span>
+            </div>
+          `).join('')
+        : `
+          <div style="background:var(--surface-highlight); border-radius:12px; padding:16px; text-align:center; margin-top:8px;">
+            <div style="font-size:24px; margin-bottom:8px;">📖</div>
+            <div style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">
+              Lesson content is ready! Click below to start your first interactive session.
+            </div>
+            <button class="btn btn-primary btn-full" onclick="startLesson(${idx}, 0)">✨ START LESSON (+50 XP)</button>
+          </div>
+        `
+      }
+    </div>
+  `;
+}
+
+function startLesson(topicIdx, lessonIdx) {
+  const topic = CURRICULUM[topicIdx];
+  const hasLessons = topic.lessons && topic.lessons.length > 0;
+  const lesson = hasLessons ? topic.lessons[lessonIdx] : {
+    title: 'Your First SELECT',
+    subtitle: 'Learn how to query database columns',
+    conceptText: 'Tables store data in columns and rows. The SELECT statement is used to pick the exact columns you want to inspect.',
+    codeExample: 'SELECT name, age FROM students;',
+    codeExplanation: '• SELECT name, age: target columns\n• FROM students: source table',
+    xpReward: 50,
+    exercises: [
+      {
+        type: 'predict',
+        question: 'What will this query return?',
+        codeSnippet: 'SELECT name, cgpa FROM students;',
+        options: [
+          'All columns in the students table',
+          'Only the "name" and "cgpa" columns for all students',
+          'Only students with CGPA > 8.0',
+        ],
+        correctIdx: 1,
+        explanation: 'SELECT name, cgpa fetches only those two columns for every row in the students table.',
+      },
+      {
+        type: 'write',
+        question: 'Write a SQL query to display the name and email of all students from the students table.',
+        expectedQuery: 'SELECT name, email FROM students;',
+        hints: ['Use: SELECT name, email FROM students;'],
+        explanation: 'Excellent! SELECT name, email FROM students; extracts student names and email addresses.',
+      }
+    ]
+  };
+
+  lessonState = { lesson, stepIndex: 0, selectedOption: null, feedback: null, queryResult: null };
+  renderLessonStep();
+  document.getElementById('lesson-overlay').classList.add('show');
+}
+
+function renderLessonStep() {
+  const { lesson, stepIndex, selectedOption, feedback, queryResult } = lessonState;
+  const totalSteps = 1 + (lesson.exercises ? lesson.exercises.length : 0);
+  const currentExercise = stepIndex > 0 ? lesson.exercises[stepIndex - 1] : null;
+
+  const stepDots = Array.from({length: totalSteps}, (_, i) => {
+    const cls = i < stepIndex ? 'done' : i === stepIndex ? 'active' : '';
+    return `<div class="step-dot ${cls}"></div>`;
+  }).join('');
+
+  let contentHtml = '';
+
+  if (stepIndex === 0) {
+    contentHtml = `
+      <div class="concept-tag">STEP 1: CONCEPT</div>
+      <div class="concept-title">What does SELECT do?</div>
+      <div class="concept-text">${lesson.conceptText}</div>
+      <div class="concept-tag" style="margin-top:16px">EXAMPLE QUERY</div>
+      <div class="code-block">${lesson.codeExample}</div>
+      <div class="code-explanation">${lesson.codeExplanation}</div>
+    `;
+  } else if (currentExercise?.type === 'predict') {
+    contentHtml = `
+      <div class="concept-tag">PREDICT THE OUTPUT</div>
+      <div class="concept-title">${currentExercise.question}</div>
+      ${currentExercise.codeSnippet ? `<div class="code-block">${currentExercise.codeSnippet}</div>` : ''}
+      <div class="options-list">
+        ${currentExercise.options.map((opt, i) => `
+          <button class="option-btn ${selectedOption === i ? 'selected' : ''}" onclick="selectOption(${i})">
+            ${String.fromCharCode(65 + i)}. ${opt}
+          </button>
+        `).join('')}
+      </div>
+    `;
+  } else if (currentExercise?.type === 'write') {
+    contentHtml = `
+      <div class="concept-tag">PRACTICE EXERCISE</div>
+      <div class="concept-title">${currentExercise.question}</div>
+      <div style="font-size:11px;font-weight:800;color:var(--text-muted);margin-top:12px;margin-bottom:6px;">YOUR SQL QUERY:</div>
+      <textarea id="lesson-editor" 
+        style="width:100%;min-height:80px;background:var(--editor-bg);color:var(--editor-text);font-family:'JetBrains Mono',monospace;font-size:14px;padding:12px;border-radius:8px;border:1px solid var(--surface-border);resize:vertical;line-height:1.5;"
+        placeholder="Write your SQL query here..."
+      >${currentExercise.expectedQuery || ''}</textarea>
+      <div class="sql-toolbar" style="border-radius:0 0 8px 8px; margin-top:0; border:1px solid var(--surface-border); border-top:none;">
+        <button class="sql-keyword" onclick="lessonInsert('SELECT ')">SELECT</button>
+        <button class="sql-keyword" onclick="lessonInsert('FROM ')">FROM</button>
+        <button class="sql-keyword" onclick="lessonInsert('WHERE ')">WHERE</button>
+        <button class="sql-keyword" onclick="lessonInsert(', ')">,</button>
+        <button class="sql-keyword" onclick="lessonInsert(';')">;</button>
+      </div>
+      <button class="run-btn" style="margin-top:10px" onclick="executeLesson()">▶ RUN QUERY</button>
+      ${queryResult && queryResult.success ? renderResultTableHtml(queryResult) : ''}
+    `;
+  }
+
+  if (feedback) {
+    contentHtml += `<div class="feedback-box ${feedback.isCorrect ? 'feedback-success' : 'feedback-error'}">${feedback.message}</div>`;
+  }
+
+  const showPrimaryBtn = stepIndex === 0 && !feedback;
+  const showCheckBtn = currentExercise?.type === 'predict' && !feedback;
+  const showNextBtn = (stepIndex === 0 && false) || feedback !== null || currentExercise?.type === 'write';
+
+  const footerBtnHtml = stepIndex === 0
+    ? `<button class="btn btn-primary btn-full" onclick="advanceLessonStep()">GOT IT, LET'S PRACTICE!</button>`
+    : currentExercise?.type === 'predict' && !feedback
+    ? `<button class="btn btn-primary btn-full" onclick="checkLessonAnswer()" ${selectedOption === null ? 'disabled' : ''}>CHECK ANSWER</button>`
+    : `<button class="btn btn-primary btn-full" onclick="advanceLessonStep()">${stepIndex < (lesson.exercises?.length || 0) ? 'NEXT EXERCISE →' : 'COMPLETE LESSON 🎉'}</button>`;
+
+  document.getElementById('overlay-content').innerHTML = `
+    <div class="lesson-view">
+      <div class="lesson-topbar">
+        <button class="lesson-back" onclick="closeLesson()">← Back to Journey</button>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="badge badge-success">✨ +${lesson.xpReward} XP</span>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:18px;font-weight:800;margin-bottom:8px;">${lesson.title}</div>
+        <div style="display:flex;gap:6px;margin-bottom:16px;">${stepDots}</div>
+      </div>
+
+      <div class="concept-section">${contentHtml}</div>
+
+      <div class="lesson-footer">${footerBtnHtml}</div>
+    </div>
+  `;
+}
+
+function selectOption(idx) {
+  lessonState.selectedOption = idx;
+  renderLessonStep();
+}
+
+function checkLessonAnswer() {
+  const { lesson, stepIndex, selectedOption } = lessonState;
+  const ex = lesson.exercises[stepIndex - 1];
+  const isCorrect = selectedOption === (ex.correctIdx ?? 1);
+  lessonState.feedback = {
+    isCorrect,
+    message: isCorrect
+      ? `🎉 Correct! ${ex.explanation}`
+      : `❌ Not quite. ${ex.explanation}`
+  };
+  renderLessonStep();
+}
+
+function executeLesson() {
+  const editor = document.getElementById('lesson-editor');
+  const q = editor ? editor.value : '';
+  const res = executeSQLSimulator(q);
+  lessonState.queryResult = res;
+  lessonState.feedback = res.success
+    ? { isCorrect: true, message: '🎉 Perfect! Your query executed successfully.' }
+    : { isCorrect: false, message: res.error?.friendlyMessage || 'Query failed.' };
+  renderLessonStep();
+}
+
+function lessonInsert(kw) {
+  const ed = document.getElementById('lesson-editor');
+  if (!ed) return;
+  const pos = ed.selectionStart;
+  ed.value = ed.value.slice(0, pos) + kw + ed.value.slice(pos);
+  ed.focus();
+  ed.setSelectionRange(pos + kw.length, pos + kw.length);
+}
+
+function advanceLessonStep() {
+  const { lesson } = lessonState;
+  const totalExercises = lesson.exercises ? lesson.exercises.length : 0;
+  if (lessonState.stepIndex < totalExercises) {
+    lessonState.stepIndex++;
+    lessonState.feedback = null;
+    lessonState.selectedOption = null;
+    lessonState.queryResult = null;
+    renderLessonStep();
+  } else {
+    closeLesson();
+    // Celebrate
+    setTimeout(() => alert('🎉 Lesson Complete! +' + lesson.xpReward + ' XP earned!'), 100);
+  }
+}
+
+function closeLesson() {
+  document.getElementById('lesson-overlay').classList.remove('show');
+  lessonState = null;
+}
+
+function closeOverlayIfBg(e) {
+  if (e.target === document.getElementById('lesson-overlay')) closeLesson();
+}
+
+// =============================================
+// SQL LAB
+// =============================================
+function renderLab() {
+  renderTableList();
+  renderSchemaDetail();
+  renderHistoryList();
+}
+
+function renderTableList() {
+  const list = document.getElementById('table-list');
+  list.innerHTML = COLLEGE_DB.tables.map((t, i) => `
+    <div class="table-item ${i === selectedTableIdx ? 'active' : ''}" onclick="selectTable(${i})">
+      <div class="table-item-left">
+        <span>📋</span>
+        <span>${t.name}</span>
+      </div>
+      <span class="table-row-count">${t.rowCount} rows</span>
+    </div>
+  `).join('');
+}
+
+function selectTable(idx) {
+  selectedTableIdx = idx;
+  renderTableList();
+  renderSchemaDetail();
+}
+
+function renderSchemaDetail() {
+  const t = COLLEGE_DB.tables[selectedTableIdx];
+  const el = document.getElementById('schema-detail');
+  el.innerHTML = `
+    <div class="schema-detail-header">COLUMNS & TYPES — ${t.name}</div>
+    ${t.columns.map(col => `
+      <div class="col-row">
+        <div class="col-left">
+          <span class="col-name">${col.name}</span>
+          ${col.isPk ? '<span class="key-badge pk">PK</span>' : ''}
+          ${col.isFk ? '<span class="key-badge fk">FK</span>' : ''}
+        </div>
+        <span class="col-type">${col.type}</span>
+      </div>
+    `).join('')}
+    <button class="sample-query-btn" onclick="loadSampleQuery()">✨ Sample Query</button>
+  `;
+}
+
+function loadSampleQuery() {
+  const t = COLLEGE_DB.tables[selectedTableIdx];
+  document.getElementById('sql-editor').value = `SELECT * FROM ${t.name};`;
+  switchLabTab('editor');
+}
+
+function switchLabTab(tab) {
+  activeLabTab = tab;
+  document.querySelectorAll('.lab-tab').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.lab-tab[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById('lab-tab-editor').classList.toggle('hidden', tab !== 'editor');
+  document.getElementById('lab-tab-history').classList.toggle('hidden', tab !== 'history');
+}
+
+function insertKeyword(kw) {
+  const ed = document.getElementById('sql-editor');
+  const pos = ed.selectionStart;
+  ed.value = ed.value.slice(0, pos) + kw + ed.value.slice(pos);
+  ed.focus();
+  ed.setSelectionRange(pos + kw.length, pos + kw.length);
+}
+
+function clearEditor() {
+  document.getElementById('sql-editor').value = '';
+  document.getElementById('result-area').innerHTML = '';
+}
+
+function copyQuery() {
+  navigator.clipboard.writeText(document.getElementById('sql-editor').value);
+}
+
+function runQuery() {
+  const q = document.getElementById('sql-editor').value.trim();
+  if (!q) {
+    document.getElementById('result-area').innerHTML = `
+      <div class="error-banner">
+        <div class="error-message">❌ Please write a SQL statement before clicking Run.</div>
+        <div class="error-hint">Try: SELECT * FROM students;</div>
+      </div>`;
+    return;
+  }
+
+  const res = executeSQLSimulator(q);
+  const resultEl = document.getElementById('result-area');
+
+  if (!queryHistory.includes(q)) {
+    queryHistory = [q, ...queryHistory.slice(0, 9)];
+    renderHistoryList();
+  }
+
+  if (res.success) {
+    resultEl.innerHTML = `
+      <div class="result-container fade-in">
+        <div class="result-header">
+          <span class="result-title">✅ QUERY RESULTS</span>
+          <div class="result-meta">
+            <span>${res.rowCount} row${res.rowCount !== 1 ? 's' : ''}</span>
+            <span>·</span>
+            <span>${res.executionTimeMs} ms</span>
+          </div>
+        </div>
+        <div class="result-table-wrap">
+          ${renderResultTableHtml(res)}
+        </div>
+      </div>`;
+  } else {
+    const fix = res.error?.suggestedFix;
+    resultEl.innerHTML = `
+      <div class="error-banner fade-in">
+        <div class="error-message">${res.error?.friendlyMessage || 'An error occurred.'}</div>
+        ${res.error?.hint ? `<div class="error-hint">💡 ${res.error.hint}</div>` : ''}
+        ${fix ? `<button class="error-fix-btn" onclick="document.getElementById('sql-editor').value = \`${fix.replace(/`/g, '\\`')}\`; document.getElementById('result-area').innerHTML='';">Apply Fix: ${fix}</button>` : ''}
+      </div>`;
+  }
+}
+
+function renderResultTableHtml(res) {
+  if (!res.success || !res.columns) return '';
+  return `
+    <table class="result-table">
+      <thead><tr>${res.columns.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+      <tbody>${(res.rows || []).map(row => `<tr>${row.map(cell => `<td>${cell ?? 'NULL'}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table>`;
+}
+
+function renderHistoryList() {
+  const list = document.getElementById('history-list');
+  if (!list) return;
+  list.innerHTML = queryHistory.map(q => `
+    <div class="history-item" onclick="loadHistoryQuery(\`${q.replace(/`/g, '\\`')}\`)">
+      🕐 ${q}
+    </div>
+  `).join('');
+}
+
+function loadHistoryQuery(q) {
+  document.getElementById('sql-editor').value = q;
+  switchLabTab('editor');
+}
+
+// =============================================
+// SQL SIMULATOR ENGINE
+// =============================================
+function executeSQLSimulator(queryText) {
+  const trimmed = queryText.trim();
+  const upper = trimmed.toUpperCase();
+  const t = Date.now();
+
+  if (!trimmed) return { success: false, error: { code:'EMPTY_QUERY', message:'Query is empty.', friendlyMessage:'❌ Please write a SQL statement before clicking Run.', hint:'Try writing: SELECT * FROM students;' }};
+
+  if (/\bFORM\b/i.test(trimmed)) return { success:false, error:{ code:'SYNTAX_ERROR', message:'syntax error at or near "FORM"', friendlyMessage:'❌ Typo detected! It looks like SQL expected FROM, but found FORM.', hint:'Did you mean: FROM students;', suggestedFix: trimmed.replace(/\bFORM\b/gi, 'FROM') }};
+
+  if (/^SELECT\b/i.test(trimmed) && !/\bFROM\b/i.test(trimmed)) return { success:false, error:{ code:'MISSING_FROM', message:'syntax error: expected FROM', friendlyMessage:'❌ Missing FROM clause in your query.', hint:'Specify which table to retrieve data from: SELECT ... FROM <table_name>;' }};
+
+  // Find matching table
+  const tableMatch = COLLEGE_DB.tables.find(t => upper.includes('FROM ' + t.name.toUpperCase()));
+  
+  if (!tableMatch) {
+    // Generic result for unknown queries
+    return {
+      success: true,
+      columns: ['result'],
+      rows: [['Query processed successfully']],
+      rowCount: 1,
+      executionTimeMs: Math.floor(Math.random() * 8) + 2,
+    };
+  }
+
+  let data = [...tableMatch.data];
+  const colNames = tableMatch.columns.map(c => c.name);
+
+  // WHERE filtering (basic)
+  if (/WHERE\s+(.+?)(?:\s+ORDER|\s+GROUP|\s+LIMIT|;|$)/i.test(trimmed)) {
+    const whereClause = RegExp.$1.trim();
+    // department_id filter
+    const deptMatch = whereClause.match(/department_id\s*=\s*(\d+)/i);
+    if (deptMatch) data = data.filter(r => r.department_id === parseInt(deptMatch[1]));
+    // cgpa >= x
+    const cgpaGteMatch = whereClause.match(/cgpa\s*>=\s*([\d.]+)/i);
+    if (cgpaGteMatch) data = data.filter(r => r.cgpa >= parseFloat(cgpaGteMatch[1]));
+    // cgpa > x
+    const cgpaGtMatch = whereClause.match(/cgpa\s*>\s*([\d.]+)/i);
+    if (cgpaGtMatch && !cgpaGteMatch) data = data.filter(r => r.cgpa > parseFloat(cgpaGtMatch[1]));
+    // credits = x
+    const creditsMatch = whereClause.match(/credits\s*=\s*(\d+)/i);
+    if (creditsMatch) data = data.filter(r => r.credits === parseInt(creditsMatch[1]));
+    // age >= x
+    const ageGteMatch = whereClause.match(/age\s*>=\s*(\d+)/i);
+    if (ageGteMatch) data = data.filter(r => r.age >= parseInt(ageGteMatch[1]));
+  }
+
+  // ORDER BY
+  if (/ORDER\s+BY\s+(\w+)\s*(ASC|DESC)?/i.test(upper)) {
+    const col = RegExp.$1.toLowerCase();
+    const dir = (RegExp.$2 || 'ASC').toUpperCase();
+    data = [...data].sort((a, b) => {
+      const av = a[col], bv = b[col];
+      if (av === undefined || bv === undefined) return 0;
+      if (typeof av === 'number' && typeof bv === 'number') return dir === 'ASC' ? av - bv : bv - av;
+      return dir === 'ASC' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+    });
+  }
+
+  // LIMIT
+  if (/LIMIT\s+(\d+)/i.test(upper)) data = data.slice(0, parseInt(RegExp.$1));
+
+  // COUNT(*)
+  if (/COUNT\s*\(\s*\*\s*\)/i.test(upper)) {
+    return { success:true, columns:['count'], rows:[[data.length]], rowCount:1, executionTimeMs: Math.floor(Math.random()*5)+2 };
+  }
+
+  // AVG / MAX / MIN / SUM
+  if (/AVG\s*\(\s*cgpa\s*\)/i.test(upper)) {
+    const avg = data.reduce((s, r) => s + (r.cgpa || 0), 0) / data.length;
+    const max = Math.max(...data.map(r => r.cgpa || 0));
+    return { success:true, columns:['avg_cgpa','max_cgpa'], rows:[[avg.toFixed(2), max]], rowCount:1, executionTimeMs: Math.floor(Math.random()*5)+2 };
+  }
+
+  // SELECT columns
+  let selectedCols = colNames;
+  const selectMatch = trimmed.match(/^SELECT\s+(.+?)\s+FROM/i);
+  if (selectMatch) {
+    const selectPart = selectMatch[1].trim();
+    if (selectPart !== '*') {
+      selectedCols = selectPart.split(',').map(c => c.trim().split(/\s+AS\s+/i)[0].trim().toLowerCase());
+      selectedCols = selectedCols.filter(c => colNames.includes(c));
+      if (selectedCols.length === 0) selectedCols = colNames;
+    }
+  }
+
+  const rows = data.map(row => selectedCols.map(c => row[c] !== undefined ? row[c] : null));
+
+  return {
+    success: true,
+    columns: selectedCols,
+    rows,
+    rowCount: rows.length,
+    executionTimeMs: Math.floor(Math.random() * 8) + 2,
+  };
+}
+
+// =============================================
+// INIT
+// =============================================
+window.addEventListener('DOMContentLoaded', () => {
+  renderHomeMastery();
+  renderProfile();
+  renderLab();
+  renderLearn();
+  renderChallenges();
+
+  // Tab handling in SQL editor
+  document.getElementById('sql-editor').addEventListener('keydown', function(e) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const s = this.selectionStart;
+      this.value = this.value.slice(0, s) + '  ' + this.value.slice(s);
+      this.setSelectionRange(s+2, s+2);
+    }
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      runQuery();
+    }
+  });
+});
+</script>
+</body>
+</html>
