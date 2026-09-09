@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QueryQuest — SQL Learning & Execution Platform</title>
-  <meta name="description" content="Duolingo meets LeetCode meets a SQL IDE. Learn SQL through gamified lessons and an interactive SQL playground." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>QueryQuest — Interactive SQL Learning Platform</title>
+  <meta name="description" content="Learn SQL interactively with QueryQuest. Master DDL, DML, DQL, TCL and run real queries in your browser — no setup required." />
+  <meta name="theme-color" content="#0B0F19" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -34,17 +35,18 @@
       --editor-bg: #0F172A;
       --editor-text: #E2E8F0;
       --editor-keyword: #38BDF8;
-      --editor-function: #F472B6;
       --editor-string: #A7F3D0;
       --editor-number: #FDE047;
       --radius: 14px;
       --radius-sm: 8px;
       --radius-lg: 20px;
+      --nav-height: 64px;
+      --header-height: 56px;
     }
 
     /* ===== RESET & BASE ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
     body {
       font-family: 'Inter', sans-serif;
       background: var(--bg);
@@ -54,127 +56,117 @@
       -webkit-font-smoothing: antialiased;
     }
     button { font-family: 'Inter', sans-serif; cursor: pointer; border: none; outline: none; }
-    textarea, input { font-family: 'JetBrains Mono', monospace; outline: none; }
+    textarea, input { font-family: 'JetBrains Mono', monospace; outline: none; border: none; }
     code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+    a { color: inherit; text-decoration: none; }
 
     /* ===== SCROLLBAR ===== */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: var(--bg); }
     ::-webkit-scrollbar-thumb { background: var(--surface-border); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-    /* ===== LAYOUT ===== */
-    .app { display: flex; flex-direction: column; height: 100vh; }
+    /* ===== APP SHELL ===== */
+    .app { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
 
     /* ===== HEADER ===== */
     .header {
       background: var(--surface);
       border-bottom: 1px solid var(--surface-border);
-      padding: 0 20px;
-      height: 60px;
+      padding: 0 16px;
+      height: var(--header-height);
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
       z-index: 100;
-      position: relative;
     }
-    .header-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    .header-logo { display: flex; align-items: center; gap: 9px; }
     .header-logo-icon {
-      width: 34px;
-      height: 34px;
-      background: var(--primary);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 0 16px rgba(99,102,241,0.4);
     }
-    .header-logo-text {
-      font-size: 18px;
-      font-weight: 800;
-      color: var(--text-primary);
-      letter-spacing: -0.3px;
-    }
+    .header-logo-text { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
     .header-logo-text span { color: var(--primary-light); }
-    .header-stats {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .stat-chip {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
+    .header-chips { display: flex; align-items: center; gap: 8px; }
+    .chip {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 10px;
       background: var(--surface-highlight);
       border-radius: 20px;
       border: 1px solid var(--surface-border);
-      font-size: 13px;
-      font-weight: 700;
-      cursor: default;
+      font-size: 12px; font-weight: 700;
     }
-    .stat-chip .icon { font-size: 16px; }
-    .stat-chip.streak { color: var(--accent); }
-    .stat-chip.xp { color: var(--secondary); }
-    .stat-chip.level { color: var(--primary-light); }
+    .chip.streak { color: var(--accent); }
+    .chip.xp { color: var(--secondary); }
 
-    /* ===== NAV ===== */
-    .nav {
-      background: var(--surface);
-      border-bottom: 1px solid var(--surface-border);
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      flex: 1;
+      overflow: hidden;
       display: flex;
-      align-items: center;
-      padding: 0 20px;
-      gap: 4px;
-      flex-shrink: 0;
+      flex-direction: column;
+      position: relative;
     }
-    .nav-btn {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 12px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-muted);
-      background: transparent;
-      border-bottom: 2px solid transparent;
-      transition: color 0.15s, border-color 0.15s;
-      white-space: nowrap;
-    }
-    .nav-btn .nav-icon { font-size: 16px; }
-    .nav-btn:hover { color: var(--text-secondary); }
-    .nav-btn.active { color: var(--primary-light); border-bottom-color: var(--primary); }
 
     /* ===== PAGES ===== */
-    .page { display: none; flex: 1; overflow: hidden; }
-    .page.active { display: flex; flex-direction: column; }
-    .page-scroll { flex: 1; overflow-y: auto; padding: 24px; }
+    .page { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+    .page.active { display: flex; }
+    .page-scroll { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 24px; }
+
+    /* ===== BOTTOM NAVIGATION ===== */
+    .bottom-nav {
+      background: var(--surface);
+      border-top: 1px solid var(--surface-border);
+      height: var(--nav-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      flex-shrink: 0;
+      z-index: 100;
+      padding: 0 4px;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 6px 4px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      min-height: 48px;
+      justify-content: center;
+    }
+    .nav-item .nav-icon { font-size: 20px; line-height: 1; }
+    .nav-item .nav-label { font-size: 10px; font-weight: 700; letter-spacing: 0.3px; }
+    .nav-item.active { color: var(--primary-light); }
+    .nav-item.active .nav-icon { filter: drop-shadow(0 0 6px rgba(99,102,241,0.6)); }
 
     /* ===== CARDS ===== */
     .card {
       background: var(--surface);
       border: 1px solid var(--surface-border);
       border-radius: var(--radius);
-      padding: 18px;
+      padding: 16px;
     }
-    .card + .card { margin-top: 16px; }
+    .card + .card { margin-top: 12px; }
 
     /* ===== BUTTONS ===== */
     .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 10px 20px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 11px 20px;
       border-radius: var(--radius-sm);
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 0.4px;
+      font-size: 13px; font-weight: 800; letter-spacing: 0.3px;
       transition: all 0.15s;
     }
     .btn:active { transform: scale(0.97); }
@@ -182,732 +174,592 @@
     .btn-primary:hover { background: var(--primary-dark); }
     .btn-success { background: var(--secondary); color: #fff; }
     .btn-success:hover { background: #0DA271; }
-    .btn-ghost {
-      background: var(--surface-highlight);
-      border: 1px solid var(--surface-border);
-      color: var(--text-secondary);
-    }
+    .btn-ghost { background: var(--surface-highlight); border: 1px solid var(--surface-border); color: var(--text-secondary); }
     .btn-ghost:hover { border-color: var(--primary-light); color: var(--primary-light); }
     .btn-danger { background: var(--error-bg); border: 1px solid var(--error-border); color: var(--error); }
-    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
     .btn-full { width: 100%; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
 
-    /* ===== PROGRESS BAR ===== */
+    /* ===== PROGRESS ===== */
     .progress-wrap { background: var(--surface-highlight); border-radius: 99px; overflow: hidden; }
-    .progress-bar { height: 100%; border-radius: 99px; transition: width 0.3s ease; }
+    .progress-bar { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
     .progress-bar-primary { background: linear-gradient(90deg, var(--primary), var(--primary-light)); }
     .progress-bar-success { background: linear-gradient(90deg, var(--secondary), var(--secondary-light)); }
 
     /* ===== BADGE / PILL ===== */
     .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 3px 8px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 800;
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 12px;
+      font-size: 11px; font-weight: 800;
     }
     .badge-primary { background: rgba(99,102,241,0.15); color: var(--primary-light); }
     .badge-success { background: var(--success-bg); color: var(--secondary); }
     .badge-warning { background: var(--warning-bg); color: var(--accent); }
     .badge-muted { background: var(--surface-highlight); color: var(--text-muted); }
+    .badge-ddl { background: rgba(56,189,248,0.12); color: #38BDF8; }
+    .badge-dml { background: rgba(251,146,60,0.12); color: #FB923C; }
+    .badge-dql { background: rgba(163,230,53,0.12); color: #A3E635; }
+    .badge-tcl { background: rgba(192,132,252,0.12); color: #C084FC; }
+    .badge-dcl { background: rgba(251,191,36,0.12); color: #FBBF24; }
 
-    /* ===== TAG ===== */
-    .tag { font-size: 10px; font-weight: 800; letter-spacing: 0.5px; color: var(--primary-light); }
+    /* ===== SECTION LABEL ===== */
+    .section-label { font-size: 10px; font-weight: 800; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 10px; }
+    .section-title { font-size: 16px; font-weight: 700; }
+    .section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 
-    /* ===== SECTION HEADER ===== */
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
-    .section-title { font-size: 16px; font-weight: 700; color: var(--text-primary); }
-    .section-label { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 12px; }
+    /* ===== UTILITY ===== */
+    .hidden { display: none !important; }
+    .mt-4 { margin-top: 4px; }
+    .mt-8 { margin-top: 8px; }
+    .mt-12 { margin-top: 12px; }
+    .mt-16 { margin-top: 16px; }
+    .mb-4 { margin-bottom: 4px; }
+    .mb-8 { margin-bottom: 8px; }
+    .mb-12 { margin-bottom: 12px; }
+    .mb-16 { margin-bottom: 16px; }
+    .text-muted { color: var(--text-muted); }
+    .text-secondary { color: var(--text-secondary); }
+    .text-success { color: var(--secondary); }
+    .text-accent { color: var(--accent); }
+    .text-primary-c { color: var(--primary-light); }
+    .fw-700 { font-weight: 700; }
+    .fw-800 { font-weight: 800; }
+    .fs-12 { font-size: 12px; }
+    .fs-13 { font-size: 13px; }
+    .fs-14 { font-size: 14px; }
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-4 { gap: 4px; }
+    .gap-8 { gap: 8px; }
+    .gap-12 { gap: 12px; }
 
-    /* =========================================
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+    .fade-in { animation: fadeIn 0.2s ease; }
+    .glow-primary { box-shadow: 0 0 20px rgba(99,102,241,0.2); }
+
+    /* =====================================================
        PAGE 1 — HOME
-    ========================================= */
-    .home-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
+    ===================================================== */
+    .home-hero {
+      background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(16,185,129,0.05));
+      border: 1px solid rgba(99,102,241,0.2);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 16px;
     }
-    @media (max-width: 800px) { .home-grid { grid-template-columns: 1fr; } }
-
-    .home-left, .home-right { display: flex; flex-direction: column; gap: 16px; }
-
-    .greeting h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
-    .greeting p { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
-
-    .continue-card {
-      background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(129,140,248,0.05));
-      border: 1px solid rgba(99,102,241,0.3);
-    }
-    .continue-badge { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
-    .continue-badge-text { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; color: var(--primary-light); }
-    .continue-lesson-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
-    .continue-lesson-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
-    .progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-    .progress-pct { font-size: 12px; color: var(--text-secondary); white-space: nowrap; font-weight: 700; }
-
-    .challenge-card { border-color: rgba(245,158,11,0.25); }
-    .challenge-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .challenge-title { font-size: 16px; font-weight: 700; }
-    .challenge-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px; }
-    .challenge-footer { display: flex; justify-content: space-between; align-items: center; }
-    .solve-link {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--primary-light);
-      cursor: pointer;
-      background: none;
-      border: none;
-    }
-    .solve-link:hover { color: var(--primary); }
-
-    .practice-grid { display: flex; flex-wrap: wrap; gap: 10px; }
-    .practice-pill {
-      padding: 10px 16px;
-      background: var(--surface-highlight);
-      border: 1px solid var(--surface-border);
-      border-radius: var(--radius-sm);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--secondary-light);
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .practice-pill:hover { border-color: var(--secondary); background: rgba(16,185,129,0.08); }
-
-    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .home-hero h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 4px; }
+    .home-hero p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+    .home-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
     .stat-box {
-      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
       border-radius: var(--radius);
+      padding: 14px;
       text-align: center;
     }
-    .stat-box-val { font-size: 22px; font-weight: 800; margin: 6px 0 2px; }
-    .stat-box-lbl { font-size: 12px; color: var(--text-muted); }
-
-    /* =========================================
-       PAGE 2 — LEARN (Journey Map)
-    ========================================= */
-    .learn-layout {
-      display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 24px;
-      max-width: 1200px;
-      margin: 0 auto;
+    .stat-box-val { font-size: 24px; font-weight: 800; margin: 6px 0 2px; }
+    .stat-box-lbl { font-size: 11px; color: var(--text-muted); }
+    .continue-card {
+      background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(129,140,248,0.05));
+      border: 1px solid rgba(99,102,241,0.25);
+      margin-bottom: 16px;
     }
-    @media (max-width: 900px) { .learn-layout { grid-template-columns: 1fr; } }
+    .continue-badge { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+    .continue-badge-text { font-size: 10px; font-weight: 800; letter-spacing: 0.6px; color: var(--primary-light); }
+    .progress-row { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+    .progress-pct { font-size: 12px; font-weight: 700; color: var(--text-secondary); white-space: nowrap; }
 
-    .journey-path { display: flex; flex-direction: column; gap: 0; }
-    .journey-node {
+    .quick-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .qa-btn {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius);
+      padding: 12px 8px;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 700; color: var(--text-secondary);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .qa-btn .qa-icon { font-size: 20px; }
+    .qa-btn:hover, .qa-btn:active { border-color: var(--primary-light); color: var(--primary-light); background: rgba(99,102,241,0.08); }
+
+    .mastery-item + .mastery-item { margin-top: 12px; }
+    .mastery-label-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    .mastery-topic { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; }
+    .mastery-pct { font-size: 12px; font-weight: 700; color: var(--primary-light); }
+
+    /* =====================================================
+       PAGE 2 — LEARN
+    ===================================================== */
+    /* SQL Category Cards */
+    .sql-categories { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .sql-cat-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+    .sql-cat-header {
       display: flex;
-      gap: 14px;
-      position: relative;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
     }
+    .sql-cat-header:hover { background: rgba(255,255,255,0.02); }
+    .sql-cat-left { display: flex; align-items: center; gap: 10px; }
+    .sql-cat-icon { font-size: 20px; }
+    .sql-cat-name { font-size: 14px; font-weight: 800; }
+    .sql-cat-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .sql-cat-chevron { font-size: 14px; color: var(--text-muted); transition: transform 0.2s; }
+    .sql-cat-card.open .sql-cat-chevron { transform: rotate(180deg); }
+    .sql-cat-body {
+      display: none;
+      padding: 0 16px 16px;
+      border-top: 1px solid var(--surface-border);
+    }
+    .sql-cat-card.open .sql-cat-body { display: block; }
+    .sql-cat-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 12px 0 14px; }
+    .cmd-grid { display: flex; flex-direction: column; gap: 8px; }
+    .cmd-row {
+      background: var(--surface-highlight);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+    }
+    .cmd-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--editor-keyword); margin-bottom: 3px; }
+    .cmd-desc { font-size: 12px; color: var(--text-secondary); }
+    .cmd-example { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--editor-string); margin-top: 5px; background: var(--editor-bg); padding: 6px 8px; border-radius: 6px; line-height: 1.5; }
+
+    /* Journey Path */
+    .learn-section-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+    .learn-section-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+    .journey-path { display: flex; flex-direction: column; }
+    .journey-node { display: flex; gap: 12px; position: relative; }
     .journey-node:not(:last-child)::before {
       content: '';
       position: absolute;
-      left: 24px;
-      top: 54px;
-      width: 3px;
-      height: calc(100% - 8px);
-      border-radius: 2px;
-      z-index: 0;
+      left: 22px; top: 50px;
+      width: 3px; height: calc(100% - 6px);
+      border-radius: 2px; z-index: 0;
     }
     .journey-node.completed::before { background: var(--secondary); }
     .journey-node.current::before { background: var(--primary); opacity: 0.4; }
     .journey-node.locked::before { background: var(--surface-border); }
-
     .node-circle {
-      width: 50px;
-      height: 50px;
+      width: 46px; height: 46px;
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      border: 3px solid;
-      flex-shrink: 0;
-      z-index: 1;
-      margin-top: 8px;
-      transition: transform 0.15s;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; border: 3px solid;
+      flex-shrink: 0; z-index: 1;
+      margin-top: 6px; transition: transform 0.15s;
     }
     .node-circle:hover { transform: scale(1.08); }
     .node-circle.completed { background: var(--secondary); border-color: var(--secondary-light); }
     .node-circle.current { background: var(--primary); border-color: var(--primary-light); cursor: pointer; }
     .node-circle.locked { background: var(--surface); border-color: var(--surface-border); cursor: not-allowed; }
-
     .topic-card {
       flex: 1;
-      padding: 14px 16px;
+      padding: 12px 14px;
       border-radius: var(--radius);
       border: 1px solid var(--surface-border);
       background: var(--surface);
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       cursor: pointer;
       transition: all 0.15s;
     }
     .topic-card:hover:not(.locked) { border-color: var(--primary-light); }
     .topic-card.current { border-color: var(--primary); background: rgba(99,102,241,0.07); }
-    .topic-card.locked { opacity: 0.55; cursor: not-allowed; }
-    .topic-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-    .topic-title { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .topic-card.locked { opacity: 0.5; cursor: not-allowed; }
+    .topic-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+    .topic-lvl { font-size: 10px; font-weight: 800; letter-spacing: 0.5px; color: var(--primary-light); }
+    .topic-title { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
     .topic-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
-    .topic-progress { margin-top: 10px; }
-    .topic-progress-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
-    .topic-progress-lbl { font-size: 11px; color: var(--text-muted); }
+    .topic-progress { margin-top: 8px; }
+    .topic-progress-lbl { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
 
-    /* Lesson Panel (right column) */
-    .lesson-panel { position: sticky; top: 0; }
-    .lesson-panel-empty { 
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      min-height: 300px; text-align: center; gap: 12px; color: var(--text-muted);
+    /* =====================================================
+       PAGE 3 — SQL LAB (Full Screen IDE)
+    ===================================================== */
+    .lab-page { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+    .lab-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--surface-border);
+      flex-shrink: 0;
+      gap: 8px;
     }
-    .lesson-panel-empty .big-icon { font-size: 48px; opacity: 0.5; }
-
-    /* =========================================
-       PAGE 3 — SQL LAB
-    ========================================= */
-    .lab-layout {
-      display: grid;
-      grid-template-columns: 260px 1fr;
-      gap: 0;
-      height: 100%;
+    .lab-db-select {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--surface-highlight);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      font-size: 12px; font-weight: 700; color: var(--text-secondary);
+      cursor: pointer; flex: 1;
     }
-    @media (max-width: 900px) { .lab-layout { grid-template-columns: 1fr; } }
+    .lab-db-select .db-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--secondary); }
+    .lab-db-select .db-dot.user { background: var(--primary-light); }
+    .lab-action-btns { display: flex; gap: 6px; }
+    .lab-icon-btn {
+      width: 34px; height: 34px;
+      background: var(--surface-highlight);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; cursor: pointer; transition: all 0.12s;
+      color: var(--text-secondary);
+    }
+    .lab-icon-btn:hover { border-color: var(--primary-light); color: var(--primary-light); }
 
-    /* Sidebar */
+    /* Schema panel (collapsible on mobile) */
+    .lab-body { flex: 1; display: flex; overflow: hidden; }
     .lab-sidebar {
       background: var(--surface);
       border-right: 1px solid var(--surface-border);
-      padding: 16px;
       overflow-y: auto;
       flex-shrink: 0;
+      transition: width 0.25s ease;
     }
-    .db-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid var(--surface-border);
-      margin-bottom: 14px;
+    .lab-sidebar.open { width: 220px; padding: 12px; }
+    .lab-sidebar.closed { width: 0; padding: 0; overflow: hidden; }
+
+    .sidebar-toggle-btn {
+      position: absolute;
+      left: 0; top: 50%;
+      transform: translateY(-50%);
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-left: none;
+      border-radius: 0 8px 8px 0;
+      width: 20px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 10;
+      font-size: 10px; color: var(--text-muted);
+      transition: all 0.15s;
     }
-    .db-name { font-size: 14px; font-weight: 800; }
-    .engine-badge {
-      padding: 2px 6px;
-      background: rgba(16,185,129,0.12);
-      border: 1px solid rgba(16,185,129,0.25);
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--secondary);
+
+    .db-section-label {
+      font-size: 10px; font-weight: 800; letter-spacing: 0.6px;
+      color: var(--text-muted); margin-bottom: 6px;
+      display: flex; align-items: center; justify-content: space-between;
     }
-    .table-list { display: flex; flex-direction: column; gap: 2px; }
+    .db-section-add-btn {
+      background: none; border: none; color: var(--primary-light);
+      font-size: 14px; cursor: pointer; padding: 0 2px;
+      line-height: 1;
+    }
     .table-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 10px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 8px;
       border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.12s;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-secondary);
+      cursor: pointer; transition: all 0.12s;
+      font-size: 12px; font-weight: 600; color: var(--text-secondary);
       border: 1px solid transparent;
     }
     .table-item:hover { background: var(--surface-highlight); color: var(--text-primary); }
-    .table-item.active { background: rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.25); color: var(--primary-light); }
-    .table-item-left { display: flex; align-items: center; gap: 8px; }
-    .table-row-count { font-size: 11px; color: var(--text-muted); }
-    .schema-detail { margin-top: 14px; }
-    .schema-detail-header { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 10px; }
-    .col-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
-    .col-left { display: flex; align-items: center; gap: 6px; }
-    .col-name { font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+    .table-item.active { background: rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.2); color: var(--primary-light); }
+    .table-item-left { display: flex; align-items: center; gap: 6px; }
+    .table-row-count { font-size: 10px; color: var(--text-muted); }
+    .schema-block { margin-top: 12px; }
+    .schema-title { font-size: 10px; font-weight: 800; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px; }
+    .col-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .col-left { display: flex; align-items: center; gap: 5px; }
+    .col-name { font-size: 12px; font-family: 'JetBrains Mono', monospace; }
     .col-type { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--editor-keyword); }
     .key-badge { padding: 1px 5px; border-radius: 4px; font-size: 9px; font-weight: 800; }
     .key-badge.pk { background: var(--warning-bg); color: var(--accent); }
     .key-badge.fk { background: rgba(99,102,241,0.15); color: var(--primary-light); }
-    .sample-query-btn {
-      width: 100%;
-      margin-top: 12px;
-      padding: 8px;
-      background: rgba(99,102,241,0.1);
+    .sample-q-btn {
+      width: 100%; margin-top: 10px;
+      padding: 7px; background: rgba(99,102,241,0.1);
       border: 1px solid rgba(99,102,241,0.2);
       border-radius: var(--radius-sm);
-      color: var(--primary-light);
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.15s;
+      color: var(--primary-light); font-size: 11px; font-weight: 700;
+      cursor: pointer; transition: all 0.15s;
     }
-    .sample-query-btn:hover { background: rgba(99,102,241,0.2); }
+    .sample-q-btn:hover { background: rgba(99,102,241,0.2); }
 
-    /* Editor area */
-    .lab-main { display: flex; flex-direction: column; overflow: hidden; }
+    /* Editor Area */
+    .lab-editor-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
     .lab-tabs {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 8px 16px;
+      display: flex; gap: 4px;
+      padding: 6px 12px;
       background: var(--surface);
       border-bottom: 1px solid var(--surface-border);
+      flex-shrink: 0;
     }
     .lab-tab {
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-muted);
-      background: transparent;
-      transition: all 0.12s;
+      padding: 5px 12px; border-radius: 6px;
+      font-size: 11px; font-weight: 700; color: var(--text-muted);
+      background: transparent; transition: all 0.12s;
     }
     .lab-tab:hover { color: var(--text-secondary); background: var(--surface-highlight); }
     .lab-tab.active { background: var(--primary); color: #fff; }
 
-    .lab-content { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .lab-tab-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+    .lab-tab-content.hidden { display: none; }
 
     /* SQL Editor */
-    .editor-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); overflow: hidden; }
-    .editor-topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px;
-      background: var(--surface-highlight);
-      border-bottom: 1px solid var(--surface-border);
-    }
-    .editor-title { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; color: var(--primary-light); }
-    .editor-actions { display: flex; gap: 8px; }
-    .editor-action-btn {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
-      border-radius: 6px;
-      background: var(--surface);
-      border: 1px solid var(--surface-border);
-      color: var(--text-muted);
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.12s;
-    }
-    .editor-action-btn:hover { color: var(--text-primary); border-color: var(--text-muted); }
-
     #sql-editor {
-      width: 100%;
-      min-height: 140px;
+      width: 100%; flex: 1; min-height: 120px;
       background: var(--editor-bg);
       color: var(--editor-text);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
-      line-height: 1.6;
-      padding: 14px;
-      border: none;
-      resize: vertical;
-      tab-size: 2;
+      font-size: 14px; line-height: 1.6;
+      padding: 14px; border: none;
+      resize: none; tab-size: 2;
     }
-
-    /* SQL Keyword Toolbar */
     .sql-toolbar {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
-      background: var(--surface-highlight);
+      display: flex; align-items: center; gap: 5px;
+      padding: 7px 12px;
+      background: var(--surface);
       border-top: 1px solid var(--surface-border);
-      flex-wrap: wrap;
+      flex-wrap: wrap; flex-shrink: 0;
     }
-    .sql-keyword {
-      padding: 4px 10px;
-      background: rgba(56,189,248,0.1);
-      border: 1px solid rgba(56,189,248,0.2);
+    .sql-kw {
+      padding: 4px 9px;
+      background: rgba(56,189,248,0.08);
+      border: 1px solid rgba(56,189,248,0.18);
       border-radius: 6px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--editor-keyword);
-      cursor: pointer;
-      transition: all 0.12s;
+      font-size: 11px; font-weight: 700; color: var(--editor-keyword);
+      cursor: pointer; transition: all 0.12s; white-space: nowrap;
     }
-    .sql-keyword:hover { background: rgba(56,189,248,0.2); }
-    .sql-toolbar-sep { width: 1px; height: 18px; background: var(--surface-border); }
+    .sql-kw:hover { background: rgba(56,189,248,0.18); }
+    .sql-kw.ddl { color: #FB923C; background: rgba(251,146,60,0.08); border-color: rgba(251,146,60,0.18); }
+    .sql-kw.ddl:hover { background: rgba(251,146,60,0.18); }
+    .sql-toolbar-sep { width: 1px; height: 16px; background: var(--surface-border); flex-shrink: 0; }
 
-    /* Run button */
     .run-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 13px;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      width: 100%; padding: 13px;
       background: linear-gradient(135deg, var(--secondary), #0DA271);
-      border: none;
-      border-radius: var(--radius-sm);
-      color: #fff;
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      transition: all 0.15s;
+      border: none; border-radius: var(--radius-sm);
+      color: #fff; font-size: 14px; font-weight: 800; letter-spacing: 0.4px;
+      cursor: pointer; transition: all 0.15s;
       box-shadow: 0 4px 20px rgba(16,185,129,0.25);
+      flex-shrink: 0; margin: 10px;
     }
     .run-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(16,185,129,0.35); }
     .run-btn:active { transform: scale(0.98); }
 
-    /* Results */
+    .result-area { padding: 0 10px 10px; }
     .result-container { border: 1px solid var(--surface-border); border-radius: var(--radius); overflow: hidden; }
     .result-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 14px;
       background: var(--surface-highlight);
       border-bottom: 1px solid var(--surface-border);
     }
     .result-title { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; color: var(--secondary); }
-    .result-meta { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--text-muted); }
+    .result-meta { font-size: 11px; color: var(--text-muted); }
     .result-table-wrap { overflow-x: auto; }
-    .result-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .result-table th {
-      padding: 10px 14px;
-      background: var(--surface-highlight);
-      color: var(--text-muted);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      text-align: left;
-      white-space: nowrap;
-      border-bottom: 1px solid var(--surface-border);
-    }
-    .result-table td {
-      padding: 9px 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-      color: var(--text-primary);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-    }
+    .result-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .result-table th { padding: 8px 12px; background: var(--surface-highlight); color: var(--text-muted); font-size: 10px; font-weight: 800; letter-spacing: 0.5px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--surface-border); }
+    .result-table td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
     .result-table tr:hover td { background: rgba(255,255,255,0.02); }
     .result-table tr:last-child td { border-bottom: none; }
 
-    /* Error Banner */
     .error-banner {
-      padding: 14px 16px;
-      background: var(--error-bg);
-      border: 1px solid var(--error-border);
+      padding: 12px 14px;
+      background: var(--error-bg); border: 1px solid var(--error-border);
       border-radius: var(--radius);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
     }
-    .error-message { font-size: 14px; font-weight: 600; color: var(--error); }
-    .error-hint { font-size: 13px; color: var(--text-secondary); }
+    .error-message { font-size: 13px; font-weight: 600; color: var(--error); margin-bottom: 4px; }
+    .error-hint { font-size: 12px; color: var(--text-secondary); }
     .error-fix-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 7px 14px;
-      background: var(--error-bg);
-      border: 1px solid var(--error-border);
-      border-radius: 8px;
-      color: var(--error);
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.12s;
-      align-self: flex-start;
-      margin-top: 4px;
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 12px; background: var(--error-bg);
+      border: 1px solid var(--error-border); border-radius: 7px;
+      color: var(--error); font-size: 11px; font-weight: 700;
+      cursor: pointer; transition: all 0.12s; margin-top: 8px;
       font-family: 'JetBrains Mono', monospace;
     }
     .error-fix-btn:hover { background: rgba(239,68,68,0.2); }
 
-    /* History items */
-    .history-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .success-banner {
       padding: 12px 14px;
+      background: var(--success-bg); border: 1px solid var(--success-border);
+      border-radius: var(--radius);
+      font-size: 13px; font-weight: 600; color: var(--secondary);
+    }
+
+    .history-item {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--surface-border);
+      cursor: pointer; transition: all 0.12s;
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .history-item:hover { background: rgba(255,255,255,0.02); color: var(--text-primary); }
+    .history-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+    /* Create Table Wizard */
+    .wizard-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75); z-index: 900;
+      align-items: flex-end; justify-content: center;
+    }
+    .wizard-overlay.show { display: flex; }
+    .wizard-panel {
       background: var(--surface);
-      border: 1px solid var(--surface-border);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.12s;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      color: var(--text-primary);
+      border-top: 1px solid var(--surface-border);
+      border-top-left-radius: var(--radius-lg);
+      border-top-right-radius: var(--radius-lg);
+      padding: 20px;
+      width: 100%; max-width: 560px;
+      max-height: 80vh; overflow-y: auto;
+      animation: slideUp 0.25s ease;
     }
-    .history-item:hover { border-color: var(--primary-light); background: rgba(99,102,241,0.05); }
+    .wizard-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+    .wizard-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+    .wizard-input {
+      width: 100%; padding: 10px 12px;
+      background: var(--editor-bg); border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm); color: var(--text-primary);
+      font-family: 'Inter', sans-serif; font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .wizard-input:focus { border-color: var(--primary); }
+    .col-def-row { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
+    .col-def-row input, .col-def-row select {
+      flex: 1; padding: 8px 10px;
+      background: var(--editor-bg); border: 1px solid var(--surface-border);
+      border-radius: var(--radius-sm); color: var(--text-primary);
+      font-family: 'Inter', sans-serif; font-size: 13px;
+    }
+    .col-def-row select option { background: var(--surface); }
+    .col-def-row input:focus, .col-def-row select:focus { border-color: var(--primary); outline: none; }
+    .remove-col-btn { background: var(--error-bg); border: 1px solid var(--error-border); color: var(--error); border-radius: var(--radius-sm); padding: 6px 10px; font-size: 14px; cursor: pointer; flex-shrink: 0; }
 
-    /* =========================================
+    /* =====================================================
        PAGE 4 — CHALLENGES
-    ========================================= */
-    .challenges-layout {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    @media (max-width: 800px) { .challenges-layout { grid-template-columns: 1fr; } }
-
-    .daily-banner {
-      grid-column: 1 / -1;
-      background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(251,191,36,0.04));
-      border: 1px solid rgba(245,158,11,0.3);
-      padding: 22px;
-    }
-    .daily-banner-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .daily-title { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
-    .daily-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px; }
-
-    .challenge-card-item {
+    ===================================================== */
+    .challenge-card {
       background: var(--surface);
       border: 1px solid var(--surface-border);
       border-radius: var(--radius);
-      padding: 16px;
-      transition: all 0.15s;
-      cursor: pointer;
+      padding: 14px;
+      margin-bottom: 10px;
+      cursor: pointer; transition: all 0.15s;
     }
-    .challenge-card-item:hover { border-color: var(--primary-light); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
-    .challenge-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-    .challenge-card-title { font-size: 15px; font-weight: 700; }
-    .challenge-card-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px; }
-    .challenge-card-footer { display: flex; justify-content: space-between; align-items: center; }
-
+    .challenge-card:hover { border-color: var(--primary-light); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
+    .challenge-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .challenge-title { font-size: 14px; font-weight: 700; }
+    .challenge-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 10px; }
+    .challenge-footer { display: flex; justify-content: space-between; align-items: center; }
     .done-badge { display: flex; align-items: center; gap: 4px; color: var(--secondary); font-size: 12px; font-weight: 700; }
 
-    /* =========================================
+    .daily-banner {
+      background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(251,191,36,0.04));
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .daily-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .daily-title { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+    .daily-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px; }
+
+    /* =====================================================
        PAGE 5 — PROFILE
-    ========================================= */
-    .profile-layout {
-      display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: 24px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    @media (max-width: 800px) { .profile-layout { grid-template-columns: 1fr; } }
-
-    .profile-card {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .avatar {
-      width: 64px; height: 64px;
+    ===================================================== */
+    .profile-avatar {
+      width: 72px; height: 72px;
       border-radius: 50%;
-      background: var(--primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      font-weight: 800;
-      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; font-weight: 800; color: #fff;
       flex-shrink: 0;
+      box-shadow: 0 0 24px rgba(99,102,241,0.35);
     }
-    .user-name { font-size: 22px; font-weight: 800; }
-    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-    @media (max-width: 600px) { .metrics-grid { grid-template-columns: 1fr 1fr; } }
-    .metric-box { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 16px; text-align: center; }
+    .profile-header-card { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .profile-name { font-size: 22px; font-weight: 800; }
+    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .metric-box { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 14px; text-align: center; }
     .metric-val { font-size: 22px; font-weight: 800; margin: 6px 0 3px; }
-    .metric-lbl { font-size: 12px; color: var(--text-muted); }
+    .metric-lbl { font-size: 11px; color: var(--text-muted); }
+    .badge-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface-highlight); border-radius: 10px; }
+    .badge-item + .badge-item { margin-top: 8px; }
+    .badge-icon { font-size: 22px; }
+    .badge-title { font-size: 13px; font-weight: 700; }
+    .badge-desc { font-size: 11px; color: var(--text-muted); }
 
-    .mastery-item + .mastery-item { margin-top: 14px; }
-    .mastery-label-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
-    .mastery-topic { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; }
-    .mastery-pct { font-size: 13px; font-weight: 700; color: var(--primary-light); }
-
-    .badge-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px;
-      background: var(--surface-highlight);
-      border-radius: 10px;
-    }
-    .badge-item + .badge-item { margin-top: 10px; }
-    .badge-icon { font-size: 24px; }
-    .badge-title { font-size: 14px; font-weight: 700; }
-    .badge-desc { font-size: 12px; color: var(--text-muted); }
-
-    .setting-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 14px;
-      background: var(--surface);
-      border: 1px solid var(--surface-border);
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-      transition: all 0.12s;
-    }
-    .setting-row:hover { border-color: var(--primary-light); }
-    .setting-row + .setting-row { margin-top: 8px; }
-
-    /* =========================================
+    /* =====================================================
        LESSON OVERLAY
-    ========================================= */
+    ===================================================== */
     .overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      z-index: 999;
-      align-items: flex-end;
-      justify-content: center;
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8); z-index: 999;
+      align-items: flex-end; justify-content: center;
     }
-    .overlay.show { display: flex; }
-    @media (min-width: 700px) {
-      .overlay { align-items: center; }
-      .overlay-panel { border-radius: var(--radius-lg) !important; max-width: 620px !important; }
-    }
+    .overlay.show { display: flex; animation: fadeIn 0.15s ease; }
     .overlay-panel {
       background: var(--surface);
       border-top: 1px solid var(--surface-border);
       border-top-left-radius: var(--radius-lg);
       border-top-right-radius: var(--radius-lg);
-      padding: 24px;
-      width: 100%;
-      max-height: 85vh;
-      overflow-y: auto;
+      padding: 20px; width: 100%;
+      max-height: 88vh; overflow-y: auto;
       animation: slideUp 0.25s ease;
     }
-    @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    .overlay-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
-    .overlay-close {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      background: var(--surface-highlight);
-      border: none;
-      color: var(--text-secondary);
-      font-size: 18px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    .overlay-close:hover { background: var(--surface-border); }
-
-    /* =========================================
-       LESSON VIEW (inside overlay or full page)
-    ========================================= */
-    .lesson-view { display: flex; flex-direction: column; gap: 16px; }
-    .lesson-topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--surface-border);
-    }
-    .lesson-back {
-      display: flex; align-items: center; gap: 6px;
-      background: none; border: none; color: var(--text-secondary);
-      font-size: 13px; font-weight: 700; cursor: pointer;
-    }
+    .overlay-handle { width: 36px; height: 4px; background: var(--surface-border); border-radius: 2px; margin: 0 auto 16px; }
+    .lesson-view { display: flex; flex-direction: column; gap: 14px; }
+    .lesson-topbar { display: flex; align-items: center; justify-content: space-between; }
+    .lesson-back { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--text-secondary); font-size: 13px; font-weight: 700; cursor: pointer; }
     .lesson-back:hover { color: var(--text-primary); }
-
-    .step-indicator { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-    .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--surface-border); }
+    .step-dots { display: flex; gap: 5px; }
+    .step-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--surface-border); }
     .step-dot.active { background: var(--primary); }
     .step-dot.done { background: var(--secondary); }
-
-    .concept-section { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 20px; }
-    .concept-tag { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; color: var(--primary-light); margin-bottom: 8px; }
-    .concept-title { font-size: 20px; font-weight: 800; margin-bottom: 10px; }
-    .concept-text { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
-    .code-block {
-      background: var(--editor-bg);
-      border: 1px solid var(--surface-border);
-      border-radius: var(--radius-sm);
-      padding: 14px;
-      margin: 12px 0;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--editor-keyword);
-      line-height: 1.6;
-    }
-    .code-explanation { font-size: 13px; color: var(--text-muted); line-height: 1.7; white-space: pre-line; }
-
-    .options-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
-    .option-btn {
-      padding: 14px;
-      background: var(--surface-highlight);
-      border: 1px solid var(--surface-border);
-      border-radius: 10px;
-      text-align: left;
-      font-size: 14px;
-      color: var(--text-primary);
-      cursor: pointer;
-      transition: all 0.12s;
-      font-family: 'Inter', sans-serif;
-    }
+    .concept-section { background: var(--surface-highlight); border: 1px solid var(--surface-border); border-radius: var(--radius); padding: 16px; }
+    .concept-tag { font-size: 10px; font-weight: 800; letter-spacing: 0.6px; color: var(--primary-light); margin-bottom: 6px; }
+    .concept-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .concept-text { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+    .code-block { background: var(--editor-bg); border: 1px solid var(--surface-border); border-radius: var(--radius-sm); padding: 12px; margin: 10px 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--editor-keyword); line-height: 1.6; overflow-x: auto; }
+    .code-explanation { font-size: 12px; color: var(--text-muted); line-height: 1.7; white-space: pre-line; }
+    .options-list { display: flex; flex-direction: column; gap: 9px; margin-top: 10px; }
+    .option-btn { padding: 12px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 10px; text-align: left; font-size: 13px; color: var(--text-primary); cursor: pointer; transition: all 0.12s; font-family: 'Inter', sans-serif; }
     .option-btn:hover { border-color: var(--primary-light); }
     .option-btn.selected { border-color: var(--primary); background: rgba(99,102,241,0.12); color: var(--primary-light); font-weight: 700; }
-
-    .feedback-box { padding: 14px; border-radius: 10px; font-size: 13px; font-weight: 600; }
+    .feedback-box { padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 600; }
     .feedback-success { background: var(--success-bg); border: 1px solid var(--success-border); color: var(--secondary); }
     .feedback-error { background: var(--error-bg); border: 1px solid var(--error-border); color: var(--error); }
+    .lesson-footer { position: sticky; bottom: 0; padding-top: 14px; background: var(--surface); border-top: 1px solid var(--surface-border); margin-top: 6px; }
 
-    .lesson-footer {
-      position: sticky;
-      bottom: 0;
-      padding-top: 16px;
-      background: var(--surface);
-      border-top: 1px solid var(--surface-border);
-      margin-top: 8px;
+    /* ===== LOADING INDICATOR ===== */
+    .sql-loading { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 13px; padding: 12px; }
+    .sql-loading .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); animation: pulse 1s infinite; }
+    .sql-loading .dot:nth-child(2) { animation-delay: 0.2s; }
+    .sql-loading .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    /* ===== RESPONSIVE — desktop gets a sidebar layout ===== */
+    @media (min-width: 768px) {
+      .header { padding: 0 24px; }
+      .page-scroll { padding: 20px; max-width: 800px; margin: 0 auto; width: 100%; }
+      .bottom-nav { justify-content: center; gap: 0; }
+      .nav-item { max-width: 120px; }
+      .lab-sidebar.open { width: 260px; }
+      .overlay-panel { max-width: 600px; border-radius: var(--radius-lg) !important; }
+      .overlay { align-items: center; }
+      .wizard-panel { border-radius: var(--radius-lg) !important; }
     }
-
-    /* =========================================
-       UTILITY
-    ========================================= */
-    .hidden { display: none !important; }
-    .flex { display: flex; }
-    .flex-col { flex-direction: column; }
-    .items-center { align-items: center; }
-    .gap-4 { gap: 4px; }
-    .gap-8 { gap: 8px; }
-    .gap-12 { gap: 12px; }
-    .gap-16 { gap: 16px; }
-    .mb-4 { margin-bottom: 4px; }
-    .mb-8 { margin-bottom: 8px; }
-    .mb-12 { margin-bottom: 12px; }
-    .mb-16 { margin-bottom: 16px; }
-    .mt-8 { margin-top: 8px; }
-    .mt-12 { margin-top: 12px; }
-    .mt-16 { margin-top: 16px; }
-    .fw-700 { font-weight: 700; }
-    .fw-800 { font-weight: 800; }
-    .fs-12 { font-size: 12px; }
-    .fs-13 { font-size: 13px; }
-    .text-muted { color: var(--text-muted); }
-    .text-secondary { color: var(--text-secondary); }
-    .text-success { color: var(--secondary); }
-    .text-accent { color: var(--accent); }
-    .text-primary-color { color: var(--primary-light); }
-
-    /* Animations */
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-    .fade-in { animation: fadeIn 0.2s ease; }
-
-    /* ===== GLOWING EFFECTS ===== */
-    .glow-primary { box-shadow: 0 0 20px rgba(99,102,241,0.2); }
-    .glow-success { box-shadow: 0 0 20px rgba(16,185,129,0.2); }
+    @media (min-width: 1024px) {
+      .page-scroll { max-width: 960px; }
+      .home-stats { grid-template-columns: 1fr 1fr 1fr 1fr; }
+      .quick-actions { grid-template-columns: repeat(6, 1fr); }
+      .metrics-grid { grid-template-columns: repeat(4, 1fr); }
+    }
   </style>
 </head>
 <body>
@@ -919,434 +771,671 @@
       <div class="header-logo-icon">⚡</div>
       <div class="header-logo-text">Query<span>Quest</span></div>
     </div>
-    <div class="header-stats">
-      <div class="stat-chip streak"><span class="icon">🔥</span> <span id="hdr-streak">8 Days</span></div>
-      <div class="stat-chip xp"><span class="icon">⚡</span> <span id="hdr-xp">2,450 XP</span></div>
-      <div class="stat-chip level"><span class="icon">🏆</span> <span id="hdr-level">Query Explorer</span></div>
+    <div class="header-chips">
+      <div class="chip streak">🔥 <span id="hdr-streak">8</span></div>
+      <div class="chip xp">⚡ <span id="hdr-xp">2,450</span></div>
     </div>
   </header>
 
-  <!-- NAV -->
-  <nav class="nav">
-    <button class="nav-btn active" data-page="home" onclick="navigate('home')"><span class="nav-icon">🏠</span> Home</button>
-    <button class="nav-btn" data-page="learn" onclick="navigate('learn')"><span class="nav-icon">📚</span> Learn</button>
-    <button class="nav-btn" data-page="lab" onclick="navigate('lab')"><span class="nav-icon">💻</span> SQL Lab</button>
-    <button class="nav-btn" data-page="challenges" onclick="navigate('challenges')"><span class="nav-icon">🏆</span> Challenges</button>
-    <button class="nav-btn" data-page="profile" onclick="navigate('profile')"><span class="nav-icon">👤</span> Profile</button>
-  </nav>
+  <!-- MAIN -->
+  <div class="main-content">
 
-  <!-- ===== PAGE: HOME ===== -->
-  <div class="page active" id="page-home">
-    <div class="page-scroll">
-      <div class="home-grid">
-        <div class="home-left">
+    <!-- ===== PAGE: HOME ===== -->
+    <div class="page active" id="page-home">
+      <div class="page-scroll">
 
-          <!-- Greeting -->
-          <div class="greeting">
-            <h1>Welcome back, Alex 👋</h1>
-            <p>Ready to master your SQL queries today?</p>
+        <div class="home-hero fade-in">
+          <h1>Welcome back, Alex 👋</h1>
+          <p>Ready to level up your SQL today? Pick up where you left off.</p>
+        </div>
+
+        <div class="home-stats">
+          <div class="stat-box">
+            <span style="font-size:20px">🔥</span>
+            <div class="stat-box-val" style="color:var(--accent)">8</div>
+            <div class="stat-box-lbl">Day Streak</div>
           </div>
-
-          <!-- Continue Learning -->
-          <div class="card continue-card">
-            <div class="continue-badge">
-              <span>✨</span>
-              <span class="continue-badge-text">CURRENT LESSON</span>
-            </div>
-            <div class="continue-lesson-title">Filtering Data (WHERE)</div>
-            <div class="continue-lesson-sub">Lesson 4 of 5 • Comparison &amp; Logic Operators</div>
-            <div class="progress-row">
-              <div class="progress-wrap" style="flex:1; height:8px;">
-                <div class="progress-bar progress-bar-primary" style="width:80%"></div>
-              </div>
-              <span class="progress-pct">80%</span>
-            </div>
-            <button class="btn btn-primary btn-full" onclick="navigate('learn')">▶ CONTINUE LESSON</button>
+          <div class="stat-box">
+            <span style="font-size:20px">⚡</span>
+            <div class="stat-box-val" style="color:var(--secondary)">2,450</div>
+            <div class="stat-box-lbl">Total XP</div>
           </div>
-
-          <!-- Daily Challenge -->
-          <div>
-            <div class="section-header">
-              <span>🔥</span>
-              <span class="section-title">Daily SQL Challenge</span>
-            </div>
-            <div class="card challenge-card" onclick="navigate('challenges')" style="cursor:pointer">
-              <div class="challenge-header">
-                <span class="challenge-title">Top Performing CSE Students</span>
-                <span class="badge badge-warning">+50 XP</span>
-              </div>
-              <div class="challenge-desc">Find the name and CGPA of all students in Computer Science (dept 101) with CGPA ≥ 8.0 sorted by CGPA descending.</div>
-              <div class="challenge-footer">
-                <span class="badge badge-muted">Intermediate</span>
-                <button class="solve-link" onclick="event.stopPropagation(); navigate('challenges')">Solve Challenge →</button>
-              </div>
-            </div>
+          <div class="stat-box">
+            <span style="font-size:20px">🛡️</span>
+            <div class="stat-box-val" style="color:var(--primary-light)">146</div>
+            <div class="stat-box-lbl">Queries Run</div>
           </div>
-
-          <!-- Quick Practice -->
-          <div>
-            <div class="section-header">
-              <span>⌨️</span>
-              <span class="section-title">Quick Practice</span>
-            </div>
-            <div class="practice-grid">
-              <button class="practice-pill" onclick="openLabWithQuery('SELECT * FROM students;')">SELECT</button>
-              <button class="practice-pill" onclick="openLabWithQuery('SELECT * FROM students\nWHERE cgpa >= 8.0;')">WHERE</button>
-              <button class="practice-pill" onclick="openLabWithQuery('SELECT s.name, d.name AS dept\nFROM students s\nJOIN departments d ON s.department_id = d.id;')">JOIN</button>
-              <button class="practice-pill" onclick="openLabWithQuery('SELECT department_id, COUNT(*) AS total\nFROM students\nGROUP BY department_id;')">GROUP BY</button>
-              <button class="practice-pill" onclick="openLabWithQuery('SELECT AVG(cgpa) AS avg_cgpa,\n       MAX(cgpa) AS max_cgpa\nFROM students;')">AGGREGATE</button>
-              <button class="practice-pill" onclick="openLabWithQuery('SELECT * FROM courses\nORDER BY credits DESC;')">ORDER BY</button>
-            </div>
+          <div class="stat-box">
+            <span style="font-size:20px">✅</span>
+            <div class="stat-box-val" style="color:var(--secondary)">32</div>
+            <div class="stat-box-lbl">Challenges</div>
           </div>
         </div>
 
-        <div class="home-right">
-
-          <!-- Your Progress -->
-          <div class="section-header"><span>📊</span><span class="section-title">Your Progress</span></div>
-          <div class="stats-row">
-            <div class="card stat-box">
-              <span style="font-size:22px">🔥</span>
-              <div class="stat-box-val" style="color:var(--accent)">8</div>
-              <div class="stat-box-lbl">Day Streak</div>
-            </div>
-            <div class="card stat-box">
-              <span style="font-size:22px">⚡</span>
-              <div class="stat-box-val" style="color:var(--secondary)">2,450</div>
-              <div class="stat-box-lbl">Total XP</div>
-            </div>
-            <div class="card stat-box">
-              <span style="font-size:22px">🛡️</span>
-              <div class="stat-box-val" style="color:var(--primary-light)">146</div>
-              <div class="stat-box-lbl">Queries Run</div>
-            </div>
-            <div class="card stat-box">
-              <span style="font-size:22px">✅</span>
-              <div class="stat-box-val" style="color:var(--secondary)">32</div>
-              <div class="stat-box-lbl">Challenges</div>
-            </div>
+        <!-- Continue Learning -->
+        <div class="card continue-card">
+          <div class="continue-badge">
+            <span>✨</span>
+            <span class="continue-badge-text">CURRENT LESSON</span>
           </div>
-
-          <!-- Topic Mastery -->
-          <div class="card" style="margin-top:16px">
-            <div class="section-label">TOPIC MASTERY</div>
-            <div id="home-mastery"></div>
-          </div>
-
-          <!-- Quick Stats -->
-          <div class="card">
-            <div class="section-label">CURRICULUM PROGRESS</div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-              <span style="font-size:14px; font-weight:700">Topics Mastered</span>
-              <span style="font-size:14px; font-weight:800; color:var(--secondary)">18 / 25</span>
+          <div style="font-size:18px; font-weight:800; margin-bottom:3px;">Filtering Data (WHERE)</div>
+          <div style="font-size:12px; color:var(--text-muted);">Lesson 4 of 5 · Comparison &amp; Logic Operators</div>
+          <div class="progress-row">
+            <div class="progress-wrap" style="flex:1; height:7px;">
+              <div class="progress-bar progress-bar-primary" style="width:80%"></div>
             </div>
-            <div class="progress-wrap" style="height:10px">
-              <div class="progress-bar progress-bar-success" style="width:72%"></div>
-            </div>
+            <span class="progress-pct">80%</span>
           </div>
-
+          <button class="btn btn-primary btn-full" onclick="navigate('learn')">▶ CONTINUE LESSON</button>
         </div>
+
+        <!-- Quick Actions -->
+        <div class="section-label">QUICK ACTIONS</div>
+        <div class="quick-actions mb-16">
+          <button class="qa-btn" onclick="openLabWithQuery('SELECT * FROM students;')">
+            <span class="qa-icon">🔍</span>SELECT
+          </button>
+          <button class="qa-btn" onclick="openLabWithQuery('SELECT * FROM students\nWHERE cgpa >= 8.0;')">
+            <span class="qa-icon">📋</span>WHERE
+          </button>
+          <button class="qa-btn" onclick="openLabWithQuery('SELECT s.name, d.name AS dept\nFROM students s\nJOIN departments d ON s.department_id = d.id;')">
+            <span class="qa-icon">🔗</span>JOIN
+          </button>
+          <button class="qa-btn" onclick="openLabWithQuery('CREATE TABLE my_table (\n  id INTEGER PRIMARY KEY,\n  name TEXT,\n  value NUMERIC\n);')">
+            <span class="qa-icon">🛠️</span>CREATE
+          </button>
+          <button class="qa-btn" onclick="openLabWithQuery('INSERT INTO my_table VALUES (1, \'Alex\', 100);')">
+            <span class="qa-icon">➕</span>INSERT
+          </button>
+          <button class="qa-btn" onclick="navigate('challenges')">
+            <span class="qa-icon">🏆</span>Challenge
+          </button>
+        </div>
+
+        <!-- Topic Mastery -->
+        <div class="card">
+          <div class="section-label">TOPIC MASTERY</div>
+          <div id="home-mastery"></div>
+        </div>
+
+        <!-- Curriculum Progress -->
+        <div class="card mt-12">
+          <div class="section-label">CURRICULUM PROGRESS</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:13px; font-weight:700">Topics Mastered</span>
+            <span style="font-size:13px; font-weight:800; color:var(--secondary)">18 / 25</span>
+          </div>
+          <div class="progress-wrap" style="height:8px">
+            <div class="progress-bar progress-bar-success" style="width:72%"></div>
+          </div>
+        </div>
+
       </div>
     </div>
-  </div>
 
-  <!-- ===== PAGE: LEARN ===== -->
-  <div class="page" id="page-learn">
-    <div class="page-scroll">
-      <div class="learn-layout">
-        <!-- Left: Journey Path -->
-        <div>
-          <h2 style="font-size:24px; font-weight:800; margin-bottom:6px;">SQL Journey</h2>
-          <p style="font-size:13px; color:var(--text-secondary); margin-bottom:24px;">Follow the structured path to database mastery</p>
+    <!-- ===== PAGE: LEARN ===== -->
+    <div class="page" id="page-learn">
+      <div class="page-scroll">
+
+        <!-- SQL CONCEPTS SECTION -->
+        <div class="section-header">
+          <span style="font-size:20px">📖</span>
+          <span class="section-title">SQL Concepts</span>
+        </div>
+        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">The five categories of SQL commands — tap to expand</p>
+
+        <div class="sql-categories" id="sql-categories"></div>
+
+        <!-- JOURNEY PATH -->
+        <div style="margin-top:28px;">
+          <div class="learn-section-title">SQL Journey 🗺️</div>
+          <div class="learn-section-sub">Follow the structured path to SQL mastery</div>
           <div class="journey-path" id="journey-path"></div>
         </div>
 
-        <!-- Right: Lesson Panel -->
-        <div class="lesson-panel" id="lesson-panel">
-          <div class="lesson-panel-empty" id="lesson-panel-empty">
-            <div class="big-icon">🗺️</div>
-            <div style="font-size:16px; font-weight:700; color:var(--text-secondary)">Select a topic to begin</div>
-            <div style="font-size:13px">Click any active or in-progress node on the path to view its lessons.</div>
-          </div>
-          <div id="lesson-panel-content" class="hidden"></div>
-        </div>
       </div>
     </div>
-  </div>
 
-  <!-- ===== PAGE: SQL LAB ===== -->
-  <div class="page" id="page-lab">
-    <div class="lab-layout" style="height:100%">
+    <!-- ===== PAGE: SQL LAB ===== -->
+    <div class="page" id="page-lab">
+      <div class="lab-page">
 
-      <!-- Sidebar -->
-      <div class="lab-sidebar">
-        <div class="db-header">
-          <span>🗄️</span>
-          <span class="db-name">College Database</span>
-          <span class="engine-badge">PostgreSQL</span>
-        </div>
-        <div class="section-label">TABLES</div>
-        <div class="table-list" id="table-list"></div>
-        <div class="schema-detail" id="schema-detail"></div>
-      </div>
-
-      <!-- Main Editor Area -->
-      <div class="lab-main">
-        <!-- Tabs -->
-        <div class="lab-tabs">
-          <button class="lab-tab active" data-tab="editor" onclick="switchLabTab('editor')">✏️ Editor</button>
-          <button class="lab-tab" data-tab="history" onclick="switchLabTab('history')">🕐 History</button>
+        <!-- Lab Top Bar -->
+        <div class="lab-header">
+          <div class="lab-db-select" onclick="toggleSidebar()" id="db-select-btn">
+            <span id="db-indicator-dot" class="db-dot"></span>
+            <span id="db-select-name">📚 College DB</span>
+            <span style="margin-left:auto; font-size:12px;">☰</span>
+          </div>
+          <div class="lab-action-btns">
+            <button class="lab-icon-btn" onclick="clearEditor()" title="Clear">↺</button>
+            <button class="lab-icon-btn" onclick="copyQuery()" title="Copy">⎘</button>
+          </div>
         </div>
 
-        <!-- Editor Tab -->
-        <div class="lab-content" id="lab-tab-editor">
-          <div class="editor-card">
-            <div class="editor-topbar">
-              <span class="editor-title">SQL EDITOR</span>
-              <div class="editor-actions">
-                <button class="editor-action-btn" onclick="clearEditor()">↺ Clear</button>
-                <button class="editor-action-btn" onclick="copyQuery()">⎘ Copy</button>
+        <div class="lab-body" style="position:relative;">
+
+          <!-- Sidebar -->
+          <div class="lab-sidebar" id="lab-sidebar">
+            <!-- Sample DB section -->
+            <div class="db-section-label" style="margin-bottom:8px;">
+              <span>📚 SAMPLE DB</span>
+              <button class="db-section-add-btn" onclick="switchToSampleDB()" title="Use Sample DB">◉</button>
+            </div>
+            <div id="sample-table-list"></div>
+
+            <div style="border-top:1px solid var(--surface-border); margin:12px 0;"></div>
+
+            <!-- My Workspace section -->
+            <div class="db-section-label">
+              <span>🛠️ MY WORKSPACE</span>
+              <button class="db-section-add-btn" onclick="openCreateWizard()" title="Create Table">＋</button>
+            </div>
+            <div id="user-table-list"></div>
+            <div id="user-table-empty" style="font-size:11px; color:var(--text-muted); text-align:center; padding:12px 0;">
+              No tables yet.<br>Click ＋ to create one!
+            </div>
+
+            <div style="border-top:1px solid var(--surface-border); margin:12px 0;"></div>
+            <div id="schema-detail"></div>
+          </div>
+
+          <!-- Editor Area -->
+          <div class="lab-editor-area">
+            <div class="lab-tabs">
+              <button class="lab-tab active" data-tab="editor" onclick="switchLabTab('editor')">✏️ Editor</button>
+              <button class="lab-tab" data-tab="history" onclick="switchLabTab('history')">🕐 History</button>
+            </div>
+
+            <!-- Editor Tab -->
+            <div class="lab-tab-content" id="lab-tab-editor">
+              <textarea id="sql-editor" spellcheck="false" placeholder="Write your SQL query here...
+
+Examples:
+  SELECT * FROM students;
+  CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT, price NUMERIC);
+  INSERT INTO products VALUES (1, 'Laptop', 999.99);
+  UPDATE products SET price = 899 WHERE id = 1;
+  DELETE FROM products WHERE id = 1;
+  DROP TABLE products;"></textarea>
+
+              <div class="sql-toolbar">
+                <button class="sql-kw" onclick="insertKeyword('SELECT ')">SELECT</button>
+                <button class="sql-kw" onclick="insertKeyword('FROM ')">FROM</button>
+                <button class="sql-kw" onclick="insertKeyword('WHERE ')">WHERE</button>
+                <div class="sql-toolbar-sep"></div>
+                <button class="sql-kw" onclick="insertKeyword('JOIN ')">JOIN</button>
+                <button class="sql-kw" onclick="insertKeyword('GROUP BY ')">GROUP BY</button>
+                <button class="sql-kw" onclick="insertKeyword('ORDER BY ')">ORDER BY</button>
+                <div class="sql-toolbar-sep"></div>
+                <button class="sql-kw ddl" onclick="insertKeyword('CREATE TABLE ')">CREATE</button>
+                <button class="sql-kw ddl" onclick="insertKeyword('INSERT INTO ')">INSERT</button>
+                <button class="sql-kw ddl" onclick="insertKeyword('UPDATE ')">UPDATE</button>
+                <button class="sql-kw ddl" onclick="insertKeyword('DELETE FROM ')">DELETE</button>
+                <button class="sql-kw ddl" onclick="insertKeyword('DROP TABLE ')">DROP</button>
+                <div class="sql-toolbar-sep"></div>
+                <button class="sql-kw" onclick="insertKeyword('; ')">;</button>
               </div>
+
+              <button class="run-btn" id="run-btn" onclick="runQuery()">▶ RUN QUERY &nbsp;<span style="font-size:11px;opacity:0.7">Ctrl+↵</span></button>
+              <div class="result-area" id="result-area"></div>
             </div>
-            <textarea id="sql-editor" spellcheck="false" placeholder="Write your SQL query here...
-  
-  Example:
-  SELECT name, cgpa
-  FROM students
-  WHERE cgpa >= 8.5
-  ORDER BY cgpa DESC;"></textarea>
-            <div class="sql-toolbar">
-              <button class="sql-keyword" onclick="insertKeyword('SELECT ')">SELECT</button>
-              <button class="sql-keyword" onclick="insertKeyword('FROM ')">FROM</button>
-              <button class="sql-keyword" onclick="insertKeyword('WHERE ')">WHERE</button>
-              <div class="sql-toolbar-sep"></div>
-              <button class="sql-keyword" onclick="insertKeyword('JOIN ')">JOIN</button>
-              <button class="sql-keyword" onclick="insertKeyword('ON ')">ON</button>
-              <div class="sql-toolbar-sep"></div>
-              <button class="sql-keyword" onclick="insertKeyword('GROUP BY ')">GROUP BY</button>
-              <button class="sql-keyword" onclick="insertKeyword('ORDER BY ')">ORDER BY</button>
-              <button class="sql-keyword" onclick="insertKeyword('LIMIT ')">LIMIT</button>
-              <div class="sql-toolbar-sep"></div>
-              <button class="sql-keyword" onclick="insertKeyword('= ')">= </button>
-              <button class="sql-keyword" onclick="insertKeyword(', ')">,</button>
-              <button class="sql-keyword" onclick="insertKeyword(';')">;</button>
+
+            <!-- History Tab -->
+            <div class="lab-tab-content hidden" id="lab-tab-history">
+              <div style="padding:10px 12px;">
+                <div class="section-label">RECENT QUERIES</div>
+              </div>
+              <div id="history-list"></div>
             </div>
           </div>
-          <button class="run-btn" onclick="runQuery()">▶ RUN QUERY</button>
-          <div id="result-area"></div>
         </div>
 
-        <!-- History Tab -->
-        <div class="lab-content hidden" id="lab-tab-history">
-          <div class="section-label">RECENT QUERIES</div>
-          <div id="history-list"></div>
-        </div>
-      </div>
+      </div><!-- end lab-page -->
     </div>
-  </div>
 
-  <!-- ===== PAGE: CHALLENGES ===== -->
-  <div class="page" id="page-challenges">
-    <div class="page-scroll">
-      <div style="max-width:1100px; margin:0 auto;">
-        <h2 style="font-size:24px; font-weight:800; margin-bottom:4px;">SQL Challenges</h2>
-        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:24px;">Test your query skills against real engineering problems</p>
+    <!-- ===== PAGE: CHALLENGES ===== -->
+    <div class="page" id="page-challenges">
+      <div class="page-scroll">
+        <div style="font-size:22px; font-weight:800; margin-bottom:4px;">SQL Challenges 🏆</div>
+        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">Test your skills against real database problems</p>
 
-        <!-- Daily Banner -->
-        <div class="card daily-banner mb-16">
-          <div class="daily-banner-top">
-            <div>
-              <span class="badge badge-warning">🔥 FEATURED DAILY</span>
-            </div>
-            <span style="font-size:16px; font-weight:800; color:var(--accent)">+50 XP</span>
+        <div class="daily-banner">
+          <div class="daily-top">
+            <span class="badge badge-warning">🔥 FEATURED DAILY</span>
+            <span style="font-size:15px; font-weight:800; color:var(--accent)">+50 XP</span>
           </div>
           <div class="daily-title">Top Performing CSE Students</div>
           <div class="daily-desc">Find the name and CGPA of all students in Computer Science (department_id = 101) with CGPA ≥ 8.0 sorted by CGPA descending.</div>
           <button class="btn btn-primary" onclick="startChallenge('-- Top Performing CSE Students\nSELECT name, cgpa\nFROM students\nWHERE department_id = 101 AND cgpa >= 8.0\nORDER BY cgpa DESC;')">⚡ START DAILY CHALLENGE</button>
         </div>
 
-        <div class="section-label mb-12">ALL PRACTICE CHALLENGES</div>
-        <div class="challenges-layout" id="challenge-list"></div>
+        <div class="section-label mb-12">ALL CHALLENGES</div>
+        <div id="challenge-list"></div>
       </div>
     </div>
-  </div>
 
-  <!-- ===== PAGE: PROFILE ===== -->
-  <div class="page" id="page-profile">
-    <div class="page-scroll">
-      <div class="profile-layout">
-        <div style="display:flex; flex-direction:column; gap:16px;">
+    <!-- ===== PAGE: PROFILE ===== -->
+    <div class="page" id="page-profile">
+      <div class="page-scroll">
 
-          <!-- User Card -->
-          <div class="card profile-card">
-            <div class="avatar">AK</div>
-            <div>
-              <div class="user-name">Alex Kumar</div>
-              <div class="badge badge-primary mt-8">🏆 Query Explorer</div>
-            </div>
-          </div>
-
-          <!-- Metrics -->
-          <div class="metrics-grid">
-            <div class="metric-box">
-              <div style="font-size:22px">🔥</div>
-              <div class="metric-val" style="color:var(--accent)">8 Days</div>
-              <div class="metric-lbl">Streak</div>
-            </div>
-            <div class="metric-box">
-              <div style="font-size:22px">⚡</div>
-              <div class="metric-val" style="color:var(--secondary)">2,450</div>
-              <div class="metric-lbl">Total XP</div>
-            </div>
-            <div class="metric-box">
-              <div style="font-size:22px">🛡️</div>
-              <div class="metric-val" style="color:var(--primary-light)">146</div>
-              <div class="metric-lbl">Queries Run</div>
-            </div>
-            <div class="metric-box">
-              <div style="font-size:22px">✅</div>
-              <div class="metric-val" style="color:var(--secondary)">32</div>
-              <div class="metric-lbl">Challenges</div>
-            </div>
-            <div class="metric-box">
-              <div style="font-size:22px">🎓</div>
-              <div class="metric-val" style="color:var(--primary-light)">18/25</div>
-              <div class="metric-lbl">Topics Done</div>
-            </div>
-          </div>
-
-          <!-- Settings -->
+        <div class="profile-header-card">
+          <div class="profile-avatar">AK</div>
           <div>
-            <div class="section-label mb-12">SETTINGS</div>
-            <div class="setting-row">⚙️ <span>Account Settings</span></div>
-            <div class="setting-row" style="border-color:rgba(239,68,68,0.2); color:var(--error)">🚪 <span>Log Out</span></div>
+            <div class="profile-name">Alex Kumar</div>
+            <div class="badge badge-primary mt-4">🏆 Query Explorer</div>
           </div>
         </div>
 
-        <div style="display:flex; flex-direction:column; gap:16px;">
-          <!-- Mastery -->
-          <div class="card">
-            <div class="section-label">TOPIC MASTERY</div>
-            <div id="profile-mastery"></div>
+        <div class="metrics-grid">
+          <div class="metric-box">
+            <div style="font-size:20px">🔥</div>
+            <div class="metric-val" style="color:var(--accent)">8</div>
+            <div class="metric-lbl">Day Streak</div>
           </div>
-
-          <!-- Achievements -->
-          <div class="card">
-            <div class="section-label">ACHIEVEMENTS</div>
-            <div id="profile-badges"></div>
+          <div class="metric-box">
+            <div style="font-size:20px">⚡</div>
+            <div class="metric-val" style="color:var(--secondary)">2,450</div>
+            <div class="metric-lbl">Total XP</div>
+          </div>
+          <div class="metric-box">
+            <div style="font-size:20px">🛡️</div>
+            <div class="metric-val" style="color:var(--primary-light)">146</div>
+            <div class="metric-lbl">Queries Run</div>
+          </div>
+          <div class="metric-box">
+            <div style="font-size:20px">✅</div>
+            <div class="metric-val" style="color:var(--secondary)">32</div>
+            <div class="metric-lbl">Challenges</div>
           </div>
         </div>
+
+        <div class="card mb-12">
+          <div class="section-label">TOPIC MASTERY</div>
+          <div id="profile-mastery"></div>
+        </div>
+
+        <div class="card">
+          <div class="section-label">ACHIEVEMENTS</div>
+          <div id="profile-badges"></div>
+        </div>
+
       </div>
     </div>
-  </div>
+
+  </div><!-- end main-content -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-page="home" onclick="navigate('home')">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Home</span>
+    </button>
+    <button class="nav-item" data-page="learn" onclick="navigate('learn')">
+      <span class="nav-icon">📚</span>
+      <span class="nav-label">Learn</span>
+    </button>
+    <button class="nav-item" data-page="lab" onclick="navigate('lab')">
+      <span class="nav-icon">💻</span>
+      <span class="nav-label">SQL Lab</span>
+    </button>
+    <button class="nav-item" data-page="challenges" onclick="navigate('challenges')">
+      <span class="nav-icon">🏆</span>
+      <span class="nav-label">Challenges</span>
+    </button>
+    <button class="nav-item" data-page="profile" onclick="navigate('profile')">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">Profile</span>
+    </button>
+  </nav>
 
   <!-- ===== LESSON OVERLAY ===== -->
   <div class="overlay" id="lesson-overlay" onclick="closeOverlayIfBg(event)">
     <div class="overlay-panel" id="overlay-panel">
+      <div class="overlay-handle"></div>
       <div id="overlay-content"></div>
     </div>
   </div>
 
-</div>
+  <!-- ===== CREATE TABLE WIZARD ===== -->
+  <div class="wizard-overlay" id="create-wizard" onclick="closeWizardIfBg(event)">
+    <div class="wizard-panel">
+      <div class="wizard-title">🛠️ Create New Table</div>
+      <div class="wizard-sub">Define your table name and columns, then click Create.</div>
+      <input class="wizard-input" id="wizard-table-name" placeholder="Table name (e.g. products)" />
+      <div class="section-label mb-8">COLUMNS</div>
+      <div id="wizard-cols"></div>
+      <button class="btn btn-ghost btn-full mt-8" style="font-size:13px" onclick="addWizardCol()">＋ Add Column</button>
+      <div style="display:flex; gap:8px; margin-top:14px;">
+        <button class="btn btn-ghost" style="flex:1" onclick="closeWizard()">Cancel</button>
+        <button class="btn btn-primary" style="flex:1" onclick="executeWizardCreate()">⚡ Create Table</button>
+      </div>
+    </div>
+  </div>
 
+</div><!-- end app -->
+
+<!-- sql.js CDN (SQLite compiled to WebAssembly) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
 <script>
+// =============================================
+// SQL.JS SETUP
+// =============================================
+let sqliteDB = null;
+let sqlReady = false;
+let activeDBMode = 'sample'; // 'sample' | 'user'
+
+async function initSQLite() {
+  try {
+    const SQL = await initSqlJs({
+      locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${file}`
+    });
+    sqliteDB = new SQL.Database();
+    // Seed the College Database into sqlite
+    sqliteDB.run(`
+      CREATE TABLE IF NOT EXISTS students (
+        id INTEGER PRIMARY KEY,
+        name TEXT,
+        age INTEGER,
+        gender TEXT,
+        department_id INTEGER,
+        email TEXT,
+        cgpa NUMERIC
+      );
+      INSERT INTO students VALUES (1,'Rahul Sharma',20,'Male',101,'rahul@college.edu',8.7);
+      INSERT INTO students VALUES (2,'Ananya Verma',21,'Female',102,'ananya@college.edu',9.1);
+      INSERT INTO students VALUES (3,'Arjun Patel',19,'Male',101,'arjun@college.edu',7.9);
+      INSERT INTO students VALUES (4,'Priya Nair',22,'Female',103,'priya@college.edu',8.9);
+      INSERT INTO students VALUES (5,'Siddharth Rao',20,'Male',102,'siddharth@college.edu',8.2);
+
+      CREATE TABLE IF NOT EXISTS departments (
+        id INTEGER PRIMARY KEY,
+        name TEXT,
+        hod TEXT,
+        location TEXT
+      );
+      INSERT INTO departments VALUES (101,'Computer Science','Dr. A. Gupta','Block A');
+      INSERT INTO departments VALUES (102,'Electronics & Comm','Dr. S. Mehta','Block B');
+      INSERT INTO departments VALUES (103,'Information Tech','Dr. R. Joshi','Block C');
+
+      CREATE TABLE IF NOT EXISTS courses (
+        id INTEGER PRIMARY KEY,
+        name TEXT,
+        credits INTEGER,
+        department_id INTEGER
+      );
+      INSERT INTO courses VALUES (301,'Database Management',4,101);
+      INSERT INTO courses VALUES (302,'Data Structures',4,101);
+      INSERT INTO courses VALUES (303,'Digital Signal Processing',3,102);
+      INSERT INTO courses VALUES (304,'Web Engineering',3,103);
+
+      CREATE TABLE IF NOT EXISTS enrollments (
+        id INTEGER PRIMARY KEY,
+        student_id INTEGER,
+        course_id INTEGER,
+        semester TEXT,
+        marks INTEGER
+      );
+      INSERT INTO enrollments VALUES (1,1,301,'Sem 4',88);
+      INSERT INTO enrollments VALUES (2,2,303,'Sem 6',94);
+      INSERT INTO enrollments VALUES (3,3,301,'Sem 4',76);
+      INSERT INTO enrollments VALUES (4,4,304,'Sem 8',91);
+      INSERT INTO enrollments VALUES (5,5,302,'Sem 4',82);
+
+      CREATE TABLE IF NOT EXISTS professors (
+        id INTEGER PRIMARY KEY,
+        name TEXT,
+        department_id INTEGER,
+        experience INTEGER
+      );
+      INSERT INTO professors VALUES (1,'Dr. A. Gupta',101,14);
+      INSERT INTO professors VALUES (2,'Dr. S. Mehta',102,10);
+      INSERT INTO professors VALUES (3,'Dr. R. Joshi',103,8);
+    `);
+    sqlReady = true;
+    console.log('sql.js ready');
+    updateUserTableList();
+  } catch (err) {
+    console.error('sql.js init failed, falling back to simulator:', err);
+    sqlReady = false;
+  }
+}
+
+function executeSQL(queryText) {
+  if (sqlReady && sqliteDB) {
+    return executeSQLiteDirect(queryText);
+  }
+  return executeSQLSimulator(queryText);
+}
+
+function executeSQLiteDirect(queryText) {
+  const t = Date.now();
+  try {
+    const stmts = queryText.trim().split(/;\s*/m).filter(s => s.trim());
+    let lastResult = null;
+    for (const stmt of stmts) {
+      if (!stmt.trim()) continue;
+      const upper = stmt.trim().toUpperCase();
+      // For SELECT-like queries return rows
+      if (/^SELECT\b|^PRAGMA\b|^WITH\b|^EXPLAIN\b/i.test(stmt.trim())) {
+        const res = sqliteDB.exec(stmt + ';');
+        if (res.length > 0) {
+          const { columns, values } = res[0];
+          lastResult = {
+            success: true,
+            columns,
+            rows: values,
+            rowCount: values.length,
+            executionTimeMs: Date.now() - t,
+            isDDL: false
+          };
+        } else {
+          lastResult = { success: true, columns: [], rows: [], rowCount: 0, executionTimeMs: Date.now() - t, isDDL: false };
+        }
+      } else {
+        // DML/DDL — run and report rows changed
+        sqliteDB.run(stmt + (stmt.endsWith(';') ? '' : ';'));
+        const upper2 = stmt.trim().toUpperCase();
+        let msg = 'Query executed successfully.';
+        if (/^CREATE\s+TABLE/i.test(stmt)) { msg = '✅ Table created successfully!'; updateUserTableList(); }
+        else if (/^DROP\s+TABLE/i.test(stmt)) { msg = '✅ Table dropped successfully!'; updateUserTableList(); }
+        else if (/^ALTER\s+TABLE/i.test(stmt)) { msg = '✅ Table altered successfully!'; updateUserTableList(); }
+        else if (/^INSERT/i.test(stmt)) { msg = `✅ Row inserted successfully!`; }
+        else if (/^UPDATE/i.test(stmt)) { msg = `✅ Rows updated successfully!`; }
+        else if (/^DELETE/i.test(stmt)) { msg = `✅ Rows deleted successfully!`; }
+        else if (/^TRUNCATE/i.test(stmt)) { msg = `✅ Table truncated!`; }
+        lastResult = { success: true, isDDL: true, message: msg, executionTimeMs: Date.now() - t };
+      }
+    }
+    return lastResult || { success: true, isDDL: true, message: '✅ Query executed.', executionTimeMs: Date.now() - t };
+  } catch (err) {
+    return {
+      success: false,
+      error: {
+        message: err.message,
+        friendlyMessage: '❌ ' + friendlifyError(err.message),
+        hint: getSQLHint(err.message, queryText)
+      }
+    };
+  }
+}
+
+function friendlifyError(msg) {
+  if (/no such table/i.test(msg)) return msg.replace('no such table', 'Table not found');
+  if (/syntax error/i.test(msg)) return 'Syntax error — check your SQL for typos';
+  if (/UNIQUE constraint/i.test(msg)) return 'Duplicate key — a row with that PRIMARY KEY already exists';
+  if (/NOT NULL constraint/i.test(msg)) return 'NULL not allowed — that column requires a value';
+  if (/no such column/i.test(msg)) return msg.replace('no such column', 'Column not found');
+  if (/table .* already exists/i.test(msg)) return 'Table already exists — use DROP TABLE first or use a different name';
+  return msg;
+}
+
+function getSQLHint(errMsg, query) {
+  if (/no such table/i.test(errMsg)) return 'Check the table name in your FROM clause. Available tables are shown in the sidebar.';
+  if (/syntax error/i.test(errMsg)) return 'Double-check your SQL syntax. Common mistakes: missing comma, unclosed parenthesis, wrong keyword.';
+  if (/UNIQUE constraint/i.test(errMsg)) return 'Try a different primary key value that doesn\'t already exist in the table.';
+  if (/no such column/i.test(errMsg)) return 'Check the column names — they are case-sensitive in SQLite. Use the sidebar to inspect columns.';
+  return null;
+}
+
+function getUserTables() {
+  if (!sqlReady || !sqliteDB) return [];
+  try {
+    const res = sqliteDB.exec(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;`);
+    if (!res.length) return [];
+    const sampleTables = ['students','departments','courses','enrollments','professors'];
+    return res[0].values.map(r => r[0]).filter(n => !sampleTables.includes(n));
+  } catch { return []; }
+}
+
+function getTableColumns(tableName) {
+  if (!sqlReady || !sqliteDB) return [];
+  try {
+    const res = sqliteDB.exec(`PRAGMA table_info("${tableName}");`);
+    if (!res.length) return [];
+    return res[0].values.map(row => ({
+      name: row[1], type: row[2], isPk: row[5] === 1
+    }));
+  } catch { return []; }
+}
+
+function getTableRowCount(tableName) {
+  if (!sqlReady || !sqliteDB) return '?';
+  try {
+    const res = sqliteDB.exec(`SELECT COUNT(*) FROM "${tableName}";`);
+    return res[0]?.values[0][0] ?? 0;
+  } catch { return '?'; }
+}
+
 // =============================================
 // DATA
 // =============================================
-const COLLEGE_DB = {
-  name: 'College Database',
-  tables: [
-    {
-      name: 'students', rowCount: 5,
-      columns: [
-        { name: 'id', type: 'INTEGER', isPk: true },
-        { name: 'name', type: 'TEXT' },
-        { name: 'age', type: 'INTEGER' },
-        { name: 'gender', type: 'TEXT' },
-        { name: 'department_id', type: 'INTEGER', isFk: true },
-        { name: 'email', type: 'TEXT' },
-        { name: 'cgpa', type: 'NUMERIC' },
-      ],
-      data: [
-        { id:1, name:'Rahul Sharma', age:20, gender:'Male', department_id:101, email:'rahul@college.edu', cgpa:8.7 },
-        { id:2, name:'Ananya Verma', age:21, gender:'Female', department_id:102, email:'ananya@college.edu', cgpa:9.1 },
-        { id:3, name:'Arjun Patel', age:19, gender:'Male', department_id:101, email:'arjun@college.edu', cgpa:7.9 },
-        { id:4, name:'Priya Nair', age:22, gender:'Female', department_id:103, email:'priya@college.edu', cgpa:8.9 },
-        { id:5, name:'Siddharth Rao', age:20, gender:'Male', department_id:102, email:'siddharth@college.edu', cgpa:8.2 },
-      ]
-    },
-    {
-      name: 'departments', rowCount: 3,
-      columns: [
-        { name: 'id', type: 'INTEGER', isPk: true },
-        { name: 'name', type: 'TEXT' },
-        { name: 'hod', type: 'TEXT' },
-        { name: 'location', type: 'TEXT' },
-      ],
-      data: [
-        { id:101, name:'Computer Science', hod:'Dr. A. Gupta', location:'Block A' },
-        { id:102, name:'Electronics & Comm', hod:'Dr. S. Mehta', location:'Block B' },
-        { id:103, name:'Information Tech', hod:'Dr. R. Joshi', location:'Block C' },
-      ]
-    },
-    {
-      name: 'courses', rowCount: 4,
-      columns: [
-        { name: 'id', type: 'INTEGER', isPk: true },
-        { name: 'name', type: 'TEXT' },
-        { name: 'credits', type: 'INTEGER' },
-        { name: 'department_id', type: 'INTEGER', isFk: true },
-      ],
-      data: [
-        { id:301, name:'Database Management', credits:4, department_id:101 },
-        { id:302, name:'Data Structures', credits:4, department_id:101 },
-        { id:303, name:'Digital Signal Processing', credits:3, department_id:102 },
-        { id:304, name:'Web Engineering', credits:3, department_id:103 },
-      ]
-    },
-    {
-      name: 'enrollments', rowCount: 5,
-      columns: [
-        { name: 'id', type: 'INTEGER', isPk: true },
-        { name: 'student_id', type: 'INTEGER', isFk: true },
-        { name: 'course_id', type: 'INTEGER', isFk: true },
-        { name: 'semester', type: 'TEXT' },
-        { name: 'marks', type: 'INTEGER' },
-      ],
-      data: [
-        { id:1, student_id:1, course_id:301, semester:'Sem 4', marks:88 },
-        { id:2, student_id:2, course_id:303, semester:'Sem 6', marks:94 },
-        { id:3, student_id:3, course_id:301, semester:'Sem 4', marks:76 },
-        { id:4, student_id:4, course_id:304, semester:'Sem 8', marks:91 },
-        { id:5, student_id:5, course_id:302, semester:'Sem 4', marks:82 },
-      ]
-    },
-    {
-      name: 'professors', rowCount: 3,
-      columns: [
-        { name: 'id', type: 'INTEGER', isPk: true },
-        { name: 'name', type: 'TEXT' },
-        { name: 'department_id', type: 'INTEGER', isFk: true },
-        { name: 'experience', type: 'INTEGER' },
-      ],
-      data: [
-        { id:1, name:'Dr. A. Gupta', department_id:101, experience:14 },
-        { id:2, name:'Dr. S. Mehta', department_id:102, experience:10 },
-        { id:3, name:'Dr. R. Joshi', department_id:103, experience:8 },
-      ]
-    },
-  ]
-};
+const SAMPLE_TABLES = [
+  {
+    name: 'students', rowCount: 5,
+    columns: [
+      { name: 'id', type: 'INTEGER', isPk: true },
+      { name: 'name', type: 'TEXT' },
+      { name: 'age', type: 'INTEGER' },
+      { name: 'gender', type: 'TEXT' },
+      { name: 'department_id', type: 'INTEGER', isFk: true },
+      { name: 'email', type: 'TEXT' },
+      { name: 'cgpa', type: 'NUMERIC' },
+    ]
+  },
+  {
+    name: 'departments', rowCount: 3,
+    columns: [
+      { name: 'id', type: 'INTEGER', isPk: true },
+      { name: 'name', type: 'TEXT' },
+      { name: 'hod', type: 'TEXT' },
+      { name: 'location', type: 'TEXT' },
+    ]
+  },
+  {
+    name: 'courses', rowCount: 4,
+    columns: [
+      { name: 'id', type: 'INTEGER', isPk: true },
+      { name: 'name', type: 'TEXT' },
+      { name: 'credits', type: 'INTEGER' },
+      { name: 'department_id', type: 'INTEGER', isFk: true },
+    ]
+  },
+  {
+    name: 'enrollments', rowCount: 5,
+    columns: [
+      { name: 'id', type: 'INTEGER', isPk: true },
+      { name: 'student_id', type: 'INTEGER', isFk: true },
+      { name: 'course_id', type: 'INTEGER', isFk: true },
+      { name: 'semester', type: 'TEXT' },
+      { name: 'marks', type: 'INTEGER' },
+    ]
+  },
+  {
+    name: 'professors', rowCount: 3,
+    columns: [
+      { name: 'id', type: 'INTEGER', isPk: true },
+      { name: 'name', type: 'TEXT' },
+      { name: 'department_id', type: 'INTEGER', isFk: true },
+      { name: 'experience', type: 'INTEGER' },
+    ]
+  },
+];
+
+const SQL_CATEGORIES = [
+  {
+    id: 'ddl', name: 'DDL', icon: '🏗️',
+    full: 'Data Definition Language',
+    badgeClass: 'badge-ddl',
+    desc: 'DDL commands define and manage the structure (schema) of your database — tables, columns, indexes, and constraints.',
+    commands: [
+      { name: 'CREATE', desc: 'Create a new table, database, index, or view', example: 'CREATE TABLE students (\n  id INTEGER PRIMARY KEY,\n  name TEXT NOT NULL,\n  cgpa NUMERIC\n);' },
+      { name: 'ALTER', desc: 'Modify an existing table structure', example: 'ALTER TABLE students ADD COLUMN email TEXT;' },
+      { name: 'DROP', desc: 'Permanently delete a table or database', example: 'DROP TABLE students;' },
+      { name: 'TRUNCATE', desc: 'Remove all rows but keep the table structure', example: 'TRUNCATE TABLE students;' },
+      { name: 'RENAME', desc: 'Rename a table or column', example: 'ALTER TABLE students RENAME TO learners;' },
+    ]
+  },
+  {
+    id: 'dml', name: 'DML', icon: '✏️',
+    full: 'Data Manipulation Language',
+    badgeClass: 'badge-dml',
+    desc: 'DML commands manipulate the data stored inside tables — inserting, modifying, and removing rows.',
+    commands: [
+      { name: 'INSERT', desc: 'Add new rows to a table', example: "INSERT INTO students (id, name, cgpa)\nVALUES (1, 'Alex Kumar', 9.2);" },
+      { name: 'UPDATE', desc: 'Modify existing rows', example: "UPDATE students SET cgpa = 9.5 WHERE id = 1;" },
+      { name: 'DELETE', desc: 'Remove specific rows from a table', example: 'DELETE FROM students WHERE cgpa < 6.0;' },
+      { name: 'MERGE', desc: 'Upsert — insert if not exists, update if exists', example: 'MERGE INTO target USING source ON condition\nWHEN MATCHED THEN UPDATE ...\nWHEN NOT MATCHED THEN INSERT ...;' },
+    ]
+  },
+  {
+    id: 'dql', name: 'DQL', icon: '🔍',
+    full: 'Data Query Language',
+    badgeClass: 'badge-dql',
+    desc: 'DQL is used to query and retrieve data from the database. SELECT is the most used SQL command.',
+    commands: [
+      { name: 'SELECT', desc: 'Retrieve data from one or more tables', example: 'SELECT name, cgpa FROM students\nWHERE cgpa >= 8.0\nORDER BY cgpa DESC\nLIMIT 5;' },
+      { name: 'WHERE', desc: 'Filter rows based on a condition', example: "SELECT * FROM students WHERE gender = 'Female';" },
+      { name: 'GROUP BY', desc: 'Group rows sharing a value to apply aggregate functions', example: 'SELECT department_id, COUNT(*) AS total\nFROM students\nGROUP BY department_id;' },
+      { name: 'HAVING', desc: 'Filter groups (used after GROUP BY)', example: 'SELECT department_id, AVG(cgpa) AS avg\nFROM students\nGROUP BY department_id\nHAVING avg > 8.5;' },
+      { name: 'JOIN', desc: 'Combine rows from two or more tables', example: 'SELECT s.name, d.name AS dept\nFROM students s\nINNER JOIN departments d ON s.department_id = d.id;' },
+      { name: 'ORDER BY', desc: 'Sort the result set', example: 'SELECT * FROM students ORDER BY cgpa DESC;' },
+      { name: 'LIMIT', desc: 'Restrict the number of returned rows', example: 'SELECT * FROM students LIMIT 3;' },
+    ]
+  },
+  {
+    id: 'tcl', name: 'TCL', icon: '🔄',
+    full: 'Transaction Control Language',
+    badgeClass: 'badge-tcl',
+    desc: 'TCL commands manage database transactions — ensuring data consistency through commit and rollback operations.',
+    commands: [
+      { name: 'BEGIN', desc: 'Start a new transaction', example: 'BEGIN TRANSACTION;' },
+      { name: 'COMMIT', desc: 'Save all changes made in the current transaction', example: 'COMMIT;' },
+      { name: 'ROLLBACK', desc: 'Undo all changes made in the current transaction', example: 'ROLLBACK;' },
+      { name: 'SAVEPOINT', desc: 'Set a point within a transaction to roll back to', example: 'SAVEPOINT before_delete;\nDELETE FROM students WHERE cgpa < 5;\nROLLBACK TO SAVEPOINT before_delete;' },
+    ]
+  },
+  {
+    id: 'dcl', name: 'DCL', icon: '🔐',
+    full: 'Data Control Language',
+    badgeClass: 'badge-dcl',
+    desc: 'DCL commands control access permissions to database objects — who can read, write, or administer tables.',
+    commands: [
+      { name: 'GRANT', desc: 'Give a user permission to perform an action', example: "GRANT SELECT, INSERT ON students TO 'app_user';" },
+      { name: 'REVOKE', desc: 'Remove a previously granted permission', example: "REVOKE INSERT ON students FROM 'app_user';" },
+    ]
+  },
+];
 
 const CURRICULUM = [
   { id:'lvl_0', level:0, title:'Database Fundamentals', desc:'Understand tables, rows, columns, and key concepts.', status:'completed', progress:100, total:3, done:3 },
-  { id:'lvl_1', level:1, title:'SQL Basics (SELECT & FROM)', desc:'Learn how to choose columns and fetch data from tables.', status:'completed', progress:100, total:4, done:4,
+  { id:'lvl_1', level:1, title:'SQL Basics — SELECT & FROM', desc:'Learn how to choose columns and fetch data from tables.', status:'completed', progress:100, total:4, done:4,
     lessons: [{
       title: 'Your First SELECT',
       subtitle: 'Retrieving data from a database table',
-      conceptText: 'Think of a database table like an Excel sheet. SELECT picks the columns you want to view, and FROM specifies which table to look inside.',
+      conceptText: 'Think of a database table like a spreadsheet. SELECT picks the columns you want to view, and FROM specifies which table to look inside.',
       codeExample: 'SELECT name, age FROM students;',
-      codeExplanation: '• SELECT name, age → columns we want\n• FROM students → table containing data\n• ; → completes the SQL statement',
+      codeExplanation: '• SELECT name, age → the columns we want\n• FROM students → the table containing data\n• ; → ends the SQL statement',
       xpReward: 50,
       exercises: [
         {
@@ -1363,34 +1452,36 @@ const CURRICULUM = [
         },
         {
           type: 'write',
-          question: 'Write a SQL query to display the name and email of all students from the students table.',
+          question: 'Write a SQL query to display the name and email of all students.',
           expectedQuery: 'SELECT name, email FROM students;',
           hints: ['Start with SELECT followed by column names.', 'Use: SELECT name, email FROM students;'],
-          explanation: 'Great job! SELECT name, email FROM students; fetches student names and email addresses.',
+          explanation: 'SELECT name, email FROM students; fetches student names and email addresses.',
         }
       ]
     }]
   },
-  { id:'lvl_2', level:2, title:'Filtering Data (WHERE)', desc:'Filter specific rows using comparisons, AND, OR, and LIKE.', status:'current', progress:80, total:5, done:4, lessons:[] },
-  { id:'lvl_3', level:3, title:'SQL Functions & Aggregates', desc:'COUNT, SUM, AVG, MIN, MAX, and String helpers.', status:'current', progress:40, total:4, done:2, lessons:[] },
-  { id:'lvl_4', level:4, title:'Grouping Data (GROUP BY)', desc:'Group rows into summary statistics with GROUP BY and HAVING.', status:'locked', progress:0, total:4, done:0, lessons:[] },
-  { id:'lvl_5', level:5, title:'Relational Joins (INNER, LEFT)', desc:'Combine data across multiple tables using foreign keys.', status:'locked', progress:0, total:6, done:0, lessons:[] },
+  { id:'lvl_2', level:2, title:'Filtering Data — WHERE', desc:'Filter specific rows using comparisons, AND, OR, and LIKE.', status:'current', progress:80, total:5, done:4, lessons:[] },
+  { id:'lvl_3', level:3, title:'SQL Functions & Aggregates', desc:'COUNT, SUM, AVG, MIN, MAX and String helpers.', status:'current', progress:40, total:4, done:2, lessons:[] },
+  { id:'lvl_4', level:4, title:'Grouping Data — GROUP BY', desc:'Group rows into summary statistics with GROUP BY and HAVING.', status:'locked', progress:0, total:4, done:0, lessons:[] },
+  { id:'lvl_5', level:5, title:'Relational Joins', desc:'Combine data across multiple tables using foreign keys.', status:'locked', progress:0, total:6, done:0, lessons:[] },
   { id:'lvl_6', level:6, title:'Subqueries & Nested Queries', desc:'Write scalar, IN, and EXISTS nested queries.', status:'locked', progress:0, total:4, done:0, lessons:[] },
+  { id:'lvl_7', level:7, title:'DDL — Creating Tables', desc:'CREATE TABLE, data types, PRIMARY KEY, NOT NULL constraints.', status:'locked', progress:0, total:4, done:0, lessons:[] },
+  { id:'lvl_8', level:8, title:'DML — Modifying Data', desc:'INSERT, UPDATE, DELETE with safe and targeted queries.', status:'locked', progress:0, total:4, done:0, lessons:[] },
 ];
 
 const CHALLENGES = [
   { id:'ch_1', title:'Top Performing CSE Students', desc:'Find the name and CGPA of all students in Computer Science (department_id = 101) with CGPA ≥ 8.0 sorted by CGPA descending.', difficulty:'Intermediate', xp:50, completed:false,
     query:'-- Top Performing CSE Students\nSELECT name, cgpa\nFROM students\nWHERE department_id = 101 AND cgpa >= 8.0\nORDER BY cgpa DESC;' },
   { id:'ch_2', title:'High Credit Courses', desc:'Find all courses offering 4 credits.', difficulty:'Beginner', xp:30, completed:true,
-    query:'-- High Credit Courses\nSELECT name, credits\nFROM courses\nWHERE credits = 4;' },
+    query:'SELECT name, credits FROM courses WHERE credits = 4;' },
   { id:'ch_3', title:'Department Head Count', desc:'Count how many total students belong to department 102.', difficulty:'Intermediate', xp:40, completed:false,
-    query:'-- Department Head Count\nSELECT COUNT(*) AS student_count\nFROM students\nWHERE department_id = 102;' },
+    query:'SELECT COUNT(*) AS student_count FROM students WHERE department_id = 102;' },
   { id:'ch_4', title:'Student Email Directory', desc:'List all student names and emails ordered alphabetically by name.', difficulty:'Beginner', xp:25, completed:false,
-    query:'-- Student Email Directory\nSELECT name, email\nFROM students\nORDER BY name ASC;' },
-  { id:'ch_5', title:'Department Course List', desc:'Show all courses along with their department ID and credits, sorted by credits.', difficulty:'Beginner', xp:25, completed:false,
-    query:'-- Department Course List\nSELECT name, department_id, credits\nFROM courses\nORDER BY credits DESC;' },
-  { id:'ch_6', title:'Student-Department Join', desc:'List student names with their department names by joining students and departments.', difficulty:'Advanced', xp:70, completed:false,
-    query:'-- Student-Department Join\nSELECT s.name AS student_name, d.name AS department\nFROM students s\nJOIN departments d ON s.department_id = d.id\nORDER BY d.name;' },
+    query:'SELECT name, email FROM students ORDER BY name ASC;' },
+  { id:'ch_5', title:'Student-Department Join', desc:'List student names with their department names by joining students and departments.', difficulty:'Advanced', xp:70, completed:false,
+    query:'SELECT s.name AS student_name, d.name AS department\nFROM students s\nJOIN departments d ON s.department_id = d.id\nORDER BY d.name;' },
+  { id:'ch_6', title:'Create & Populate a Table', desc:'Create a table called "scores" with columns: id (PK), student_name (TEXT), score (INTEGER). Then insert 2 rows.', difficulty:'Advanced', xp:80, completed:false,
+    query:'-- Step 1: Create the table\nCREATE TABLE scores (\n  id INTEGER PRIMARY KEY,\n  student_name TEXT,\n  score INTEGER\n);\n\n-- Step 2: Insert rows\nINSERT INTO scores VALUES (1, \'Alex\', 95);\nINSERT INTO scores VALUES (2, \'Priya\', 88);\n\n-- Step 3: Verify\nSELECT * FROM scores;' },
 ];
 
 const MASTERY = [
@@ -1398,40 +1489,42 @@ const MASTERY = [
   { topic: 'WHERE', percentage: 82 },
   { topic: 'GROUP BY', percentage: 61 },
   { topic: 'JOINS', percentage: 43 },
+  { topic: 'DDL (CREATE)', percentage: 28 },
   { topic: 'SUBQUERIES', percentage: 18 },
 ];
 
 const ACHIEVEMENTS = [
-  { icon: '⚡', title: 'First Query', desc: 'Executed 1st SQL statement' },
-  { icon: '✅', title: 'SELECT Master', desc: 'Completed SELECT module' },
-  { icon: '🧙', title: 'WHERE Wizard', desc: 'Passed filtering quiz' },
+  { icon: '⚡', title: 'First Query', desc: 'Executed your first SQL statement' },
+  { icon: '✅', title: 'SELECT Master', desc: 'Completed the SELECT module' },
+  { icon: '🧙', title: 'WHERE Wizard', desc: 'Passed the filtering quiz' },
   { icon: '🔥', title: '8 Day Streak', desc: '8 days of daily SQL practice' },
+  { icon: '🛠️', title: 'Table Builder', desc: 'Created your first custom table' },
 ];
 
 // =============================================
 // STATE
 // =============================================
 let selectedTableIdx = 0;
+let selectedTableSource = 'sample'; // 'sample' | 'user'
 let queryHistory = [
   'SELECT * FROM students;',
   'SELECT name, email FROM students WHERE department_id = 101;',
   'SELECT * FROM courses;',
 ];
 let activeLabTab = 'editor';
-let lessonState = null; // { lessonIdx, stepIndex, selectedOption, feedback }
-let selectedTopicForLesson = null;
+let lessonState = null;
+let sidebarOpen = true;
 
 // =============================================
 // NAVIGATION
 // =============================================
 function navigate(pageId) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   const page = document.getElementById('page-' + pageId);
-  const btn = document.querySelector(`.nav-btn[data-page="${pageId}"]`);
-  if (page) { page.classList.add('active'); page.classList.add('fade-in'); }
+  const btn = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+  if (page) { page.classList.add('active'); }
   if (btn) btn.classList.add('active');
-
   if (pageId === 'lab') renderLab();
   if (pageId === 'learn') renderLearn();
   if (pageId === 'challenges') renderChallenges();
@@ -1448,7 +1541,7 @@ function startChallenge(q) {
 }
 
 // =============================================
-// HOME PAGE
+// HOME
 // =============================================
 function renderHomeMastery() {
   const el = document.getElementById('home-mastery');
@@ -1458,7 +1551,7 @@ function renderHomeMastery() {
         <span class="mastery-topic">${m.topic}</span>
         <span class="mastery-pct">${m.percentage}%</span>
       </div>
-      <div class="progress-wrap" style="height:6px">
+      <div class="progress-wrap" style="height:5px">
         <div class="progress-bar progress-bar-primary" style="width:${m.percentage}%"></div>
       </div>
     </div>
@@ -1466,61 +1559,55 @@ function renderHomeMastery() {
 }
 
 // =============================================
-// PROFILE PAGE
+// LEARN — SQL CATEGORIES
 // =============================================
-function renderProfile() {
-  const mastery = document.getElementById('profile-mastery');
-  mastery.innerHTML = MASTERY.map(m => `
-    <div class="mastery-item">
-      <div class="mastery-label-row">
-        <span class="mastery-topic">${m.topic}</span>
-        <span class="mastery-pct">${m.percentage}%</span>
+function renderSQLCategories() {
+  const container = document.getElementById('sql-categories');
+  container.innerHTML = SQL_CATEGORIES.map(cat => `
+    <div class="sql-cat-card" id="cat-${cat.id}">
+      <div class="sql-cat-header" onclick="toggleCategory('${cat.id}')">
+        <div class="sql-cat-left">
+          <span class="sql-cat-icon">${cat.icon}</span>
+          <div>
+            <div class="sql-cat-name">
+              <span class="badge ${cat.badgeClass}" style="margin-right:6px">${cat.name}</span>
+              ${cat.full}
+            </div>
+            <div class="sql-cat-subtitle">${cat.commands.length} commands</div>
+          </div>
+        </div>
+        <span class="sql-cat-chevron">▼</span>
       </div>
-      <div class="progress-wrap" style="height:6px">
-        <div class="progress-bar progress-bar-primary" style="width:${m.percentage}%"></div>
-      </div>
-    </div>
-  `).join('');
-
-  const badges = document.getElementById('profile-badges');
-  badges.innerHTML = ACHIEVEMENTS.map(a => `
-    <div class="badge-item">
-      <div class="badge-icon">${a.icon}</div>
-      <div>
-        <div class="badge-title">${a.title}</div>
-        <div class="badge-desc">${a.desc}</div>
-      </div>
-    </div>
-  `).join('');
-}
-
-// =============================================
-// CHALLENGES PAGE
-// =============================================
-function renderChallenges() {
-  const list = document.getElementById('challenge-list');
-  list.innerHTML = CHALLENGES.map(c => `
-    <div class="challenge-card-item card" onclick="startChallenge(\`${c.query.replace(/`/g, '\\`')}\`)">
-      <div class="challenge-card-header">
-        <span class="challenge-card-title">${c.title}</span>
-        ${c.completed
-          ? `<span class="done-badge">✓ Completed</span>`
-          : `<span class="badge badge-warning">+${c.xp} XP</span>`
-        }
-      </div>
-      <div class="challenge-card-desc">${c.desc}</div>
-      <div class="challenge-card-footer">
-        <span class="badge badge-muted">${c.difficulty}</span>
-        <span style="font-size:13px; font-weight:700; color:var(--primary-light)">Solve →</span>
+      <div class="sql-cat-body">
+        <div class="sql-cat-desc">${cat.desc}</div>
+        <div class="cmd-grid">
+          ${cat.commands.map(cmd => `
+            <div class="cmd-row">
+              <div class="cmd-name">${cmd.name}</div>
+              <div class="cmd-desc">${cmd.desc}</div>
+              <div class="cmd-example">${escapeHtml(cmd.example)}</div>
+            </div>
+          `).join('')}
+        </div>
       </div>
     </div>
   `).join('');
 }
 
+function toggleCategory(id) {
+  const card = document.getElementById('cat-' + id);
+  card.classList.toggle('open');
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 // =============================================
-// LEARN PAGE
+// LEARN — JOURNEY PATH
 // =============================================
 function renderLearn() {
+  renderSQLCategories();
   const path = document.getElementById('journey-path');
   path.innerHTML = CURRICULUM.map((topic, idx) => {
     const isCompleted = topic.status === 'completed';
@@ -1528,28 +1615,24 @@ function renderLearn() {
     const isLocked = topic.status === 'locked';
     const nodeClass = isCompleted ? 'completed' : isCurrent ? 'current' : 'locked';
     const nodeEmoji = isCompleted ? '✓' : isCurrent ? '▶' : '🔒';
-    const inProgressBadge = isCurrent ? `<span class="badge badge-primary" style="font-size:9px;">IN PROGRESS</span>` : '';
-
     return `
       <div class="journey-node ${nodeClass}">
-        <div class="node-circle ${nodeClass}" 
-          style="${isLocked ? 'font-size:16px' : ''}"
+        <div class="node-circle ${nodeClass}"
+          style="${isLocked ? 'font-size:15px' : ''}"
           onclick="${!isLocked ? `selectTopic(${idx})` : ''}"
         >${nodeEmoji}</div>
-        <div class="topic-card ${isCurrent ? 'current' : ''} ${isLocked ? 'locked' : ''}" 
+        <div class="topic-card ${isCurrent ? 'current' : ''} ${isLocked ? 'locked' : ''}"
           onclick="${!isLocked ? `selectTopic(${idx})` : ''}">
-          <div class="topic-card-header">
-            <span class="tag">LEVEL ${topic.level}</span>
-            ${inProgressBadge}
+          <div class="topic-card-top">
+            <span class="topic-lvl">LEVEL ${topic.level}</span>
+            ${isCurrent ? '<span class="badge badge-primary" style="font-size:9px">IN PROGRESS</span>' : ''}
           </div>
           <div class="topic-title">${topic.title}</div>
           <div class="topic-desc">${topic.desc}</div>
           ${!isLocked ? `
             <div class="topic-progress">
-              <div class="topic-progress-row">
-                <span class="topic-progress-lbl">${topic.done}/${topic.total} Lessons</span>
-              </div>
-              <div class="progress-wrap" style="height:5px">
+              <div class="topic-progress-lbl">${topic.done}/${topic.total} Lessons</div>
+              <div class="progress-wrap" style="height:4px">
                 <div class="progress-bar ${isCompleted ? 'progress-bar-success' : 'progress-bar-primary'}" style="width:${topic.progress}%"></div>
               </div>
             </div>
@@ -1562,82 +1645,69 @@ function renderLearn() {
 
 function selectTopic(idx) {
   const topic = CURRICULUM[idx];
-  selectedTopicForLesson = topic;
-  const panelEmpty = document.getElementById('lesson-panel-empty');
-  const panelContent = document.getElementById('lesson-panel-content');
-
-  panelEmpty.classList.add('hidden');
-  panelContent.classList.remove('hidden');
-
   const lessons = topic.lessons || [];
   const hasLessons = lessons.length > 0;
 
-  panelContent.innerHTML = `
-    <div class="card fade-in">
-      <div class="tag mb-4">LEVEL ${topic.level}</div>
-      <div style="font-size:20px; font-weight:800; margin-bottom:6px;">${topic.title}</div>
-      <div style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">${topic.desc}</div>
-
-      <div class="section-label">LESSONS IN THIS TOPIC</div>
-      ${hasLessons
-        ? lessons.map((lesson, li) => `
-            <div class="badge-item" style="cursor:pointer; border:1px solid var(--surface-border); margin-top:8px;"
-              onclick="startLesson(${idx}, ${li})">
-              <div style="width:36px;height:36px;background:rgba(99,102,241,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">📖</div>
-              <div style="flex:1">
-                <div style="font-size:14px;font-weight:700">${lesson.title}</div>
-                <div style="font-size:12px;color:var(--text-muted)">${lesson.subtitle}</div>
-              </div>
-              <span style="font-size:12px;font-weight:700;color:var(--secondary)">+${lesson.xpReward} XP</span>
+  // Show a bottom sheet / modal with topic info and lessons
+  const overlay = document.getElementById('lesson-overlay');
+  const content = document.getElementById('overlay-content');
+  content.innerHTML = `
+    <div style="font-size:10px;font-weight:800;letter-spacing:0.5px;color:var(--primary-light);margin-bottom:4px">LEVEL ${topic.level}</div>
+    <div style="font-size:20px;font-weight:800;margin-bottom:4px">${topic.title}</div>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">${topic.desc}</div>
+    <div class="section-label">LESSONS IN THIS TOPIC</div>
+    ${hasLessons
+      ? lessons.map((lesson, li) => `
+          <div class="badge-item" style="cursor:pointer; border:1px solid var(--surface-border); margin-top:8px; background:var(--surface);"
+            onclick="startLesson(${idx}, ${li})">
+            <div style="width:34px;height:34px;background:rgba(99,102,241,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">📖</div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700">${lesson.title}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${lesson.subtitle}</div>
             </div>
-          `).join('')
-        : `
-          <div style="background:var(--surface-highlight); border-radius:12px; padding:16px; text-align:center; margin-top:8px;">
-            <div style="font-size:24px; margin-bottom:8px;">📖</div>
-            <div style="font-size:13px; color:var(--text-secondary); margin-bottom:12px;">
-              Lesson content is ready! Click below to start your first interactive session.
-            </div>
-            <button class="btn btn-primary btn-full" onclick="startLesson(${idx}, 0)">✨ START LESSON (+50 XP)</button>
+            <span style="font-size:12px;font-weight:700;color:var(--secondary)">+${lesson.xpReward} XP</span>
           </div>
-        `
-      }
-    </div>
+        `).join('')
+      : `<div style="background:var(--surface-highlight);border-radius:12px;padding:14px;text-align:center;margin-top:8px">
+           <div style="font-size:22px;margin-bottom:8px">📖</div>
+           <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">Interactive lesson content is ready. Start your session!</div>
+           <button class="btn btn-primary btn-full" onclick="startLesson(${idx}, 0)">✨ START LESSON (+50 XP)</button>
+         </div>`
+    }
   `;
+  overlay.classList.add('show');
 }
 
+// =============================================
+// LESSON
+// =============================================
 function startLesson(topicIdx, lessonIdx) {
   const topic = CURRICULUM[topicIdx];
   const hasLessons = topic.lessons && topic.lessons.length > 0;
   const lesson = hasLessons ? topic.lessons[lessonIdx] : {
-    title: 'Your First SELECT',
-    subtitle: 'Learn how to query database columns',
-    conceptText: 'Tables store data in columns and rows. The SELECT statement is used to pick the exact columns you want to inspect.',
-    codeExample: 'SELECT name, age FROM students;',
-    codeExplanation: '• SELECT name, age: target columns\n• FROM students: source table',
+    title: topic.title,
+    subtitle: 'Interactive SQL lesson',
+    conceptText: 'Explore this topic by running queries in the SQL Lab. Experiment freely!',
+    codeExample: 'SELECT * FROM students LIMIT 3;',
+    codeExplanation: '• SELECT * → all columns\n• FROM students → the table\n• LIMIT 3 → only 3 rows',
     xpReward: 50,
     exercises: [
       {
         type: 'predict',
-        question: 'What will this query return?',
-        codeSnippet: 'SELECT name, cgpa FROM students;',
-        options: [
-          'All columns in the students table',
-          'Only the "name" and "cgpa" columns for all students',
-          'Only students with CGPA > 8.0',
-        ],
+        question: 'What does LIMIT do in a SQL query?',
+        options: ['Filters rows by a condition', 'Restricts the number of rows returned', 'Sorts the rows'],
         correctIdx: 1,
-        explanation: 'SELECT name, cgpa fetches only those two columns for every row in the students table.',
+        explanation: 'LIMIT restricts how many rows the query returns.',
       },
       {
         type: 'write',
-        question: 'Write a SQL query to display the name and email of all students from the students table.',
-        expectedQuery: 'SELECT name, email FROM students;',
-        hints: ['Use: SELECT name, email FROM students;'],
-        explanation: 'Excellent! SELECT name, email FROM students; extracts student names and email addresses.',
+        question: 'Write a query to get all rows from the courses table.',
+        expectedQuery: 'SELECT * FROM courses;',
+        hints: ['Use: SELECT * FROM courses;'],
+        explanation: 'SELECT * FROM courses; returns all columns and all rows from the courses table.',
       }
     ]
   };
-
   lessonState = { lesson, stepIndex: 0, selectedOption: null, feedback: null, queryResult: null };
   renderLessonStep();
   document.getElementById('lesson-overlay').classList.add('show');
@@ -1647,32 +1717,30 @@ function renderLessonStep() {
   const { lesson, stepIndex, selectedOption, feedback, queryResult } = lessonState;
   const totalSteps = 1 + (lesson.exercises ? lesson.exercises.length : 0);
   const currentExercise = stepIndex > 0 ? lesson.exercises[stepIndex - 1] : null;
-
   const stepDots = Array.from({length: totalSteps}, (_, i) => {
     const cls = i < stepIndex ? 'done' : i === stepIndex ? 'active' : '';
     return `<div class="step-dot ${cls}"></div>`;
   }).join('');
 
   let contentHtml = '';
-
   if (stepIndex === 0) {
     contentHtml = `
       <div class="concept-tag">STEP 1: CONCEPT</div>
-      <div class="concept-title">What does SELECT do?</div>
+      <div class="concept-title">${lesson.title}</div>
       <div class="concept-text">${lesson.conceptText}</div>
-      <div class="concept-tag" style="margin-top:16px">EXAMPLE QUERY</div>
-      <div class="code-block">${lesson.codeExample}</div>
+      <div class="concept-tag" style="margin-top:14px">EXAMPLE QUERY</div>
+      <div class="code-block">${escapeHtml(lesson.codeExample)}</div>
       <div class="code-explanation">${lesson.codeExplanation}</div>
     `;
   } else if (currentExercise?.type === 'predict') {
     contentHtml = `
       <div class="concept-tag">PREDICT THE OUTPUT</div>
       <div class="concept-title">${currentExercise.question}</div>
-      ${currentExercise.codeSnippet ? `<div class="code-block">${currentExercise.codeSnippet}</div>` : ''}
+      ${currentExercise.codeSnippet ? `<div class="code-block">${escapeHtml(currentExercise.codeSnippet)}</div>` : ''}
       <div class="options-list">
         ${currentExercise.options.map((opt, i) => `
           <button class="option-btn ${selectedOption === i ? 'selected' : ''}" onclick="selectOption(${i})">
-            ${String.fromCharCode(65 + i)}. ${opt}
+            ${String.fromCharCode(65+i)}. ${opt}
           </button>
         `).join('')}
       </div>
@@ -1681,33 +1749,28 @@ function renderLessonStep() {
     contentHtml = `
       <div class="concept-tag">PRACTICE EXERCISE</div>
       <div class="concept-title">${currentExercise.question}</div>
-      <div style="font-size:11px;font-weight:800;color:var(--text-muted);margin-top:12px;margin-bottom:6px;">YOUR SQL QUERY:</div>
-      <textarea id="lesson-editor" 
-        style="width:100%;min-height:80px;background:var(--editor-bg);color:var(--editor-text);font-family:'JetBrains Mono',monospace;font-size:14px;padding:12px;border-radius:8px;border:1px solid var(--surface-border);resize:vertical;line-height:1.5;"
+      <div style="font-size:10px;font-weight:800;color:var(--text-muted);margin-top:10px;margin-bottom:5px">YOUR SQL QUERY:</div>
+      <textarea id="lesson-editor"
+        style="width:100%;min-height:72px;background:var(--editor-bg);color:var(--editor-text);font-family:'JetBrains Mono',monospace;font-size:13px;padding:10px;border-radius:8px;border:1px solid var(--surface-border);resize:vertical;line-height:1.5"
         placeholder="Write your SQL query here..."
       >${currentExercise.expectedQuery || ''}</textarea>
-      <div class="sql-toolbar" style="border-radius:0 0 8px 8px; margin-top:0; border:1px solid var(--surface-border); border-top:none;">
-        <button class="sql-keyword" onclick="lessonInsert('SELECT ')">SELECT</button>
-        <button class="sql-keyword" onclick="lessonInsert('FROM ')">FROM</button>
-        <button class="sql-keyword" onclick="lessonInsert('WHERE ')">WHERE</button>
-        <button class="sql-keyword" onclick="lessonInsert(', ')">,</button>
-        <button class="sql-keyword" onclick="lessonInsert(';')">;</button>
+      <div class="sql-toolbar" style="border-radius:0 0 8px 8px;margin-top:-1px;border:1px solid var(--surface-border);border-top:none;">
+        <button class="sql-kw" onclick="lessonInsert('SELECT ')">SELECT</button>
+        <button class="sql-kw" onclick="lessonInsert('FROM ')">FROM</button>
+        <button class="sql-kw" onclick="lessonInsert('WHERE ')">WHERE</button>
+        <button class="sql-kw" onclick="lessonInsert(';')">;</button>
       </div>
-      <button class="run-btn" style="margin-top:10px" onclick="executeLesson()">▶ RUN QUERY</button>
-      ${queryResult && queryResult.success ? renderResultTableHtml(queryResult) : ''}
+      <button class="run-btn" style="margin:8px 0" onclick="executeLesson()">▶ RUN QUERY</button>
+      ${queryResult && queryResult.success && !queryResult.isDDL ? renderResultTableHtml(queryResult) : ''}
     `;
   }
 
   if (feedback) {
-    contentHtml += `<div class="feedback-box ${feedback.isCorrect ? 'feedback-success' : 'feedback-error'}">${feedback.message}</div>`;
+    contentHtml += `<div class="feedback-box ${feedback.isCorrect ? 'feedback-success' : 'feedback-error'} mt-8">${feedback.message}</div>`;
   }
 
-  const showPrimaryBtn = stepIndex === 0 && !feedback;
-  const showCheckBtn = currentExercise?.type === 'predict' && !feedback;
-  const showNextBtn = (stepIndex === 0 && false) || feedback !== null || currentExercise?.type === 'write';
-
   const footerBtnHtml = stepIndex === 0
-    ? `<button class="btn btn-primary btn-full" onclick="advanceLessonStep()">GOT IT, LET'S PRACTICE!</button>`
+    ? `<button class="btn btn-primary btn-full" onclick="advanceLessonStep()">GOT IT, LET'S PRACTICE! →</button>`
     : currentExercise?.type === 'predict' && !feedback
     ? `<button class="btn btn-primary btn-full" onclick="checkLessonAnswer()" ${selectedOption === null ? 'disabled' : ''}>CHECK ANSWER</button>`
     : `<button class="btn btn-primary btn-full" onclick="advanceLessonStep()">${stepIndex < (lesson.exercises?.length || 0) ? 'NEXT EXERCISE →' : 'COMPLETE LESSON 🎉'}</button>`;
@@ -1715,19 +1778,14 @@ function renderLessonStep() {
   document.getElementById('overlay-content').innerHTML = `
     <div class="lesson-view">
       <div class="lesson-topbar">
-        <button class="lesson-back" onclick="closeLesson()">← Back to Journey</button>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span class="badge badge-success">✨ +${lesson.xpReward} XP</span>
-        </div>
+        <button class="lesson-back" onclick="closeLesson()">← Back</button>
+        <span class="badge badge-success">✨ +${lesson.xpReward} XP</span>
       </div>
-
       <div>
-        <div style="font-size:18px;font-weight:800;margin-bottom:8px;">${lesson.title}</div>
-        <div style="display:flex;gap:6px;margin-bottom:16px;">${stepDots}</div>
+        <div style="font-size:16px;font-weight:800;margin-bottom:6px">${lesson.title}</div>
+        <div class="step-dots">${stepDots}</div>
       </div>
-
       <div class="concept-section">${contentHtml}</div>
-
       <div class="lesson-footer">${footerBtnHtml}</div>
     </div>
   `;
@@ -1744,9 +1802,7 @@ function checkLessonAnswer() {
   const isCorrect = selectedOption === (ex.correctIdx ?? 1);
   lessonState.feedback = {
     isCorrect,
-    message: isCorrect
-      ? `🎉 Correct! ${ex.explanation}`
-      : `❌ Not quite. ${ex.explanation}`
+    message: isCorrect ? `🎉 Correct! ${ex.explanation}` : `❌ Not quite. ${ex.explanation}`
   };
   renderLessonStep();
 }
@@ -1754,10 +1810,10 @@ function checkLessonAnswer() {
 function executeLesson() {
   const editor = document.getElementById('lesson-editor');
   const q = editor ? editor.value : '';
-  const res = executeSQLSimulator(q);
+  const res = executeSQL(q);
   lessonState.queryResult = res;
   lessonState.feedback = res.success
-    ? { isCorrect: true, message: '🎉 Perfect! Your query executed successfully.' }
+    ? { isCorrect: true, message: '🎉 Great work! Your query executed successfully.' }
     : { isCorrect: false, message: res.error?.friendlyMessage || 'Query failed.' };
   renderLessonStep();
 }
@@ -1782,8 +1838,9 @@ function advanceLessonStep() {
     renderLessonStep();
   } else {
     closeLesson();
-    // Celebrate
-    setTimeout(() => alert('🎉 Lesson Complete! +' + lesson.xpReward + ' XP earned!'), 100);
+    setTimeout(() => {
+      showToast(`🎉 Lesson Complete! +${lesson.xpReward} XP earned!`);
+    }, 100);
   }
 }
 
@@ -1800,35 +1857,131 @@ function closeOverlayIfBg(e) {
 // SQL LAB
 // =============================================
 function renderLab() {
-  renderTableList();
+  renderSampleTableList();
+  updateUserTableList();
   renderSchemaDetail();
   renderHistoryList();
 }
 
-function renderTableList() {
-  const list = document.getElementById('table-list');
-  list.innerHTML = COLLEGE_DB.tables.map((t, i) => `
-    <div class="table-item ${i === selectedTableIdx ? 'active' : ''}" onclick="selectTable(${i})">
+function toggleSidebar() {
+  sidebarOpen = !sidebarOpen;
+  const sidebar = document.getElementById('lab-sidebar');
+  sidebar.classList.toggle('open', sidebarOpen);
+  sidebar.classList.toggle('closed', !sidebarOpen);
+}
+
+function switchToSampleDB() {
+  activeDBMode = 'sample';
+  document.getElementById('db-indicator-dot').className = 'db-dot';
+  document.getElementById('db-select-name').textContent = '📚 College DB';
+}
+
+function renderSampleTableList() {
+  const list = document.getElementById('sample-table-list');
+  list.innerHTML = SAMPLE_TABLES.map((t, i) => `
+    <div class="table-item ${selectedTableSource === 'sample' && i === selectedTableIdx ? 'active' : ''}"
+      onclick="selectTable('sample', ${i})">
       <div class="table-item-left">
         <span>📋</span>
         <span>${t.name}</span>
       </div>
-      <span class="table-row-count">${t.rowCount} rows</span>
+      <span class="table-row-count">${t.rowCount}r</span>
     </div>
   `).join('');
 }
 
-function selectTable(idx) {
+function updateUserTableList() {
+  const list = document.getElementById('user-table-list');
+  const empty = document.getElementById('user-table-empty');
+  const userTables = getUserTables();
+  if (userTables.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = userTables.map((tName, i) => {
+    const rowCount = getTableRowCount(tName);
+    return `
+      <div class="table-item ${selectedTableSource === 'user' && selectedTableIdx === i ? 'active' : ''}"
+        onclick="selectUserTable(${i}, '${tName}')">
+        <div class="table-item-left">
+          <span>🛠️</span>
+          <span>${tName}</span>
+        </div>
+        <span class="table-row-count">${rowCount}r</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectTable(source, idx) {
+  selectedTableSource = source;
   selectedTableIdx = idx;
-  renderTableList();
+  renderSampleTableList();
+  updateUserTableList();
   renderSchemaDetail();
+  activeDBMode = source;
+  const dotEl = document.getElementById('db-indicator-dot');
+  const nameEl = document.getElementById('db-select-name');
+  if (source === 'sample') {
+    dotEl.className = 'db-dot';
+    nameEl.textContent = '📚 College DB';
+  }
+}
+
+function selectUserTable(idx, tableName) {
+  selectedTableSource = 'user';
+  selectedTableIdx = idx;
+  renderSampleTableList();
+  updateUserTableList();
+  // Show schema from sqlite
+  const el = document.getElementById('schema-detail');
+  const cols = getTableColumns(tableName);
+  const rowCount = getTableRowCount(tableName);
+  el.innerHTML = `
+    <div class="schema-title">COLUMNS — ${tableName}</div>
+    ${cols.map(col => `
+      <div class="col-row">
+        <div class="col-left">
+          <span class="col-name">${col.name}</span>
+          ${col.isPk ? '<span class="key-badge pk">PK</span>' : ''}
+        </div>
+        <span class="col-type">${col.type}</span>
+      </div>
+    `).join('')}
+    <button class="sample-q-btn" onclick="loadUserTableQuery('${tableName}')">✨ SELECT * FROM ${tableName}</button>
+    <button class="sample-q-btn" style="margin-top:6px;background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2);color:var(--error)" onclick="dropUserTable('${tableName}')">🗑️ DROP TABLE ${tableName}</button>
+  `;
+  document.getElementById('db-indicator-dot').className = 'db-dot user';
+  document.getElementById('db-select-name').textContent = `🛠️ ${tableName}`;
+}
+
+function loadUserTableQuery(tableName) {
+  document.getElementById('sql-editor').value = `SELECT * FROM ${tableName};`;
+  if (window.innerWidth < 768) toggleSidebar();
+}
+
+function dropUserTable(tableName) {
+  if (!confirm(`Drop table "${tableName}"? This cannot be undone.`)) return;
+  try {
+    sqliteDB.run(`DROP TABLE IF EXISTS "${tableName}";`);
+    updateUserTableList();
+    document.getElementById('schema-detail').innerHTML = '';
+    document.getElementById('db-indicator-dot').className = 'db-dot';
+    document.getElementById('db-select-name').textContent = '📚 College DB';
+    showToast(`🗑️ Table "${tableName}" dropped.`);
+  } catch (err) {
+    showToast('❌ ' + err.message);
+  }
 }
 
 function renderSchemaDetail() {
-  const t = COLLEGE_DB.tables[selectedTableIdx];
+  if (selectedTableSource !== 'sample') return;
+  const t = SAMPLE_TABLES[selectedTableIdx];
   const el = document.getElementById('schema-detail');
   el.innerHTML = `
-    <div class="schema-detail-header">COLUMNS & TYPES — ${t.name}</div>
+    <div class="schema-title">COLUMNS — ${t.name}</div>
     ${t.columns.map(col => `
       <div class="col-row">
         <div class="col-left">
@@ -1839,14 +1992,15 @@ function renderSchemaDetail() {
         <span class="col-type">${col.type}</span>
       </div>
     `).join('')}
-    <button class="sample-query-btn" onclick="loadSampleQuery()">✨ Sample Query</button>
+    <button class="sample-q-btn" onclick="loadSampleQuery()">✨ SELECT * FROM ${t.name}</button>
   `;
 }
 
 function loadSampleQuery() {
-  const t = COLLEGE_DB.tables[selectedTableIdx];
+  const t = SAMPLE_TABLES[selectedTableIdx];
   document.getElementById('sql-editor').value = `SELECT * FROM ${t.name};`;
   switchLabTab('editor');
+  if (window.innerWidth < 768) toggleSidebar();
 }
 
 function switchLabTab(tab) {
@@ -1871,56 +2025,66 @@ function clearEditor() {
 }
 
 function copyQuery() {
-  navigator.clipboard.writeText(document.getElementById('sql-editor').value);
+  const val = document.getElementById('sql-editor').value;
+  navigator.clipboard.writeText(val).then(() => showToast('📋 Copied!'));
 }
 
 function runQuery() {
   const q = document.getElementById('sql-editor').value.trim();
   if (!q) {
     document.getElementById('result-area').innerHTML = `
-      <div class="error-banner">
+      <div class="error-banner fade-in">
         <div class="error-message">❌ Please write a SQL statement before clicking Run.</div>
         <div class="error-hint">Try: SELECT * FROM students;</div>
       </div>`;
     return;
   }
 
-  const res = executeSQLSimulator(q);
-  const resultEl = document.getElementById('result-area');
+  document.getElementById('result-area').innerHTML = `
+    <div class="sql-loading fade-in">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <span>Executing...</span>
+    </div>`;
 
-  if (!queryHistory.includes(q)) {
-    queryHistory = [q, ...queryHistory.slice(0, 9)];
-    renderHistoryList();
-  }
+  // Small delay for UX
+  setTimeout(() => {
+    const res = executeSQL(q);
+    const resultEl = document.getElementById('result-area');
 
-  if (res.success) {
-    resultEl.innerHTML = `
-      <div class="result-container fade-in">
-        <div class="result-header">
-          <span class="result-title">✅ QUERY RESULTS</span>
-          <div class="result-meta">
-            <span>${res.rowCount} row${res.rowCount !== 1 ? 's' : ''}</span>
-            <span>·</span>
-            <span>${res.executionTimeMs} ms</span>
-          </div>
-        </div>
-        <div class="result-table-wrap">
-          ${renderResultTableHtml(res)}
-        </div>
-      </div>`;
-  } else {
-    const fix = res.error?.suggestedFix;
-    resultEl.innerHTML = `
-      <div class="error-banner fade-in">
-        <div class="error-message">${res.error?.friendlyMessage || 'An error occurred.'}</div>
-        ${res.error?.hint ? `<div class="error-hint">💡 ${res.error.hint}</div>` : ''}
-        ${fix ? `<button class="error-fix-btn" onclick="document.getElementById('sql-editor').value = \`${fix.replace(/`/g, '\\`')}\`; document.getElementById('result-area').innerHTML='';">Apply Fix: ${fix}</button>` : ''}
-      </div>`;
-  }
+    if (!queryHistory.includes(q)) {
+      queryHistory = [q, ...queryHistory.slice(0, 19)];
+      renderHistoryList();
+    }
+
+    if (res.success) {
+      if (res.isDDL) {
+        resultEl.innerHTML = `<div class="success-banner fade-in">${res.message}<br><span style="font-size:11px;opacity:0.7">${res.executionTimeMs}ms</span></div>`;
+      } else {
+        resultEl.innerHTML = `
+          <div class="result-container fade-in">
+            <div class="result-header">
+              <span class="result-title">✅ RESULTS</span>
+              <span class="result-meta">${res.rowCount} row${res.rowCount !== 1 ? 's' : ''} · ${res.executionTimeMs}ms</span>
+            </div>
+            <div class="result-table-wrap">
+              ${renderResultTableHtml(res)}
+            </div>
+          </div>`;
+      }
+    } else {
+      const fix = res.error?.suggestedFix;
+      resultEl.innerHTML = `
+        <div class="error-banner fade-in">
+          <div class="error-message">${res.error?.friendlyMessage || '❌ An error occurred.'}</div>
+          ${res.error?.hint ? `<div class="error-hint">💡 ${res.error.hint}</div>` : ''}
+          ${fix ? `<button class="error-fix-btn" onclick="document.getElementById('sql-editor').value=\`${fix.replace(/`/g,'\\`')}\`;document.getElementById('result-area').innerHTML=''">Apply Fix</button>` : ''}
+        </div>`;
+    }
+  }, 80);
 }
 
 function renderResultTableHtml(res) {
-  if (!res.success || !res.columns) return '';
+  if (!res.success || !res.columns || res.columns.length === 0) return '<div style="padding:12px;color:var(--text-muted);font-size:13px">No rows returned.</div>';
   return `
     <table class="result-table">
       <thead><tr>${res.columns.map(c => `<th>${c}</th>`).join('')}</tr></thead>
@@ -1931,9 +2095,14 @@ function renderResultTableHtml(res) {
 function renderHistoryList() {
   const list = document.getElementById('history-list');
   if (!list) return;
+  if (queryHistory.length === 0) {
+    list.innerHTML = '<div style="padding:14px;color:var(--text-muted);font-size:13px;text-align:center">No history yet</div>';
+    return;
+  }
   list.innerHTML = queryHistory.map(q => `
     <div class="history-item" onclick="loadHistoryQuery(\`${q.replace(/`/g, '\\`')}\`)">
-      🕐 ${q}
+      <span class="history-icon">🕐</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${q}</span>
     </div>
   `).join('');
 }
@@ -1944,104 +2113,252 @@ function loadHistoryQuery(q) {
 }
 
 // =============================================
-// SQL SIMULATOR ENGINE
+// SQL SIMULATOR (fallback when sql.js not loaded)
 // =============================================
 function executeSQLSimulator(queryText) {
   const trimmed = queryText.trim();
   const upper = trimmed.toUpperCase();
   const t = Date.now();
 
-  if (!trimmed) return { success: false, error: { code:'EMPTY_QUERY', message:'Query is empty.', friendlyMessage:'❌ Please write a SQL statement before clicking Run.', hint:'Try writing: SELECT * FROM students;' }};
+  if (!trimmed) return { success: false, error: { code:'EMPTY_QUERY', friendlyMessage:'❌ Please write a SQL statement before clicking Run.', hint:'Try: SELECT * FROM students;' }};
 
-  if (/\bFORM\b/i.test(trimmed)) return { success:false, error:{ code:'SYNTAX_ERROR', message:'syntax error at or near "FORM"', friendlyMessage:'❌ Typo detected! It looks like SQL expected FROM, but found FORM.', hint:'Did you mean: FROM students;', suggestedFix: trimmed.replace(/\bFORM\b/gi, 'FROM') }};
+  if (/\bFORM\b/i.test(trimmed) && /^SELECT/i.test(trimmed))
+    return { success:false, error:{ friendlyMessage:'❌ Typo: Did you mean FROM instead of FORM?', suggestedFix: trimmed.replace(/\bFORM\b/gi, 'FROM') }};
 
-  if (/^SELECT\b/i.test(trimmed) && !/\bFROM\b/i.test(trimmed)) return { success:false, error:{ code:'MISSING_FROM', message:'syntax error: expected FROM', friendlyMessage:'❌ Missing FROM clause in your query.', hint:'Specify which table to retrieve data from: SELECT ... FROM <table_name>;' }};
+  if (/^SELECT\b/i.test(trimmed) && !/\bFROM\b/i.test(trimmed))
+    return { success:false, error:{ friendlyMessage:'❌ Missing FROM clause. Specify which table to retrieve from.', hint:'SELECT ... FROM <table_name>;' }};
 
-  // Find matching table
-  const tableMatch = COLLEGE_DB.tables.find(t => upper.includes('FROM ' + t.name.toUpperCase()));
-  
-  if (!tableMatch) {
-    // Generic result for unknown queries
-    return {
-      success: true,
-      columns: ['result'],
-      rows: [['Query processed successfully']],
-      rowCount: 1,
-      executionTimeMs: Math.floor(Math.random() * 8) + 2,
-    };
+  // DML/DDL fallback messages
+  if (/^(CREATE|DROP|ALTER|INSERT|UPDATE|DELETE|TRUNCATE)/i.test(trimmed)) {
+    return { success: true, isDDL: true, message: '⚠️ sql.js is loading — please wait a moment and try again. DDL/DML will work once the engine is ready.', executionTimeMs: 0 };
   }
 
-  let data = [...tableMatch.data];
-  const colNames = tableMatch.columns.map(c => c.name);
+  const SAMPLE_DATA = {
+    students: {
+      columns: ['id','name','age','gender','department_id','email','cgpa'],
+      data: [
+        {id:1,name:'Rahul Sharma',age:20,gender:'Male',department_id:101,email:'rahul@college.edu',cgpa:8.7},
+        {id:2,name:'Ananya Verma',age:21,gender:'Female',department_id:102,email:'ananya@college.edu',cgpa:9.1},
+        {id:3,name:'Arjun Patel',age:19,gender:'Male',department_id:101,email:'arjun@college.edu',cgpa:7.9},
+        {id:4,name:'Priya Nair',age:22,gender:'Female',department_id:103,email:'priya@college.edu',cgpa:8.9},
+        {id:5,name:'Siddharth Rao',age:20,gender:'Male',department_id:102,email:'siddharth@college.edu',cgpa:8.2},
+      ]
+    },
+    departments: {
+      columns: ['id','name','hod','location'],
+      data: [
+        {id:101,name:'Computer Science',hod:'Dr. A. Gupta',location:'Block A'},
+        {id:102,name:'Electronics & Comm',hod:'Dr. S. Mehta',location:'Block B'},
+        {id:103,name:'Information Tech',hod:'Dr. R. Joshi',location:'Block C'},
+      ]
+    },
+    courses: {
+      columns: ['id','name','credits','department_id'],
+      data: [
+        {id:301,name:'Database Management',credits:4,department_id:101},
+        {id:302,name:'Data Structures',credits:4,department_id:101},
+        {id:303,name:'Digital Signal Processing',credits:3,department_id:102},
+        {id:304,name:'Web Engineering',credits:3,department_id:103},
+      ]
+    },
+    enrollments: {
+      columns: ['id','student_id','course_id','semester','marks'],
+      data: [
+        {id:1,student_id:1,course_id:301,semester:'Sem 4',marks:88},
+        {id:2,student_id:2,course_id:303,semester:'Sem 6',marks:94},
+        {id:3,student_id:3,course_id:301,semester:'Sem 4',marks:76},
+        {id:4,student_id:4,course_id:304,semester:'Sem 8',marks:91},
+        {id:5,student_id:5,course_id:302,semester:'Sem 4',marks:82},
+      ]
+    },
+    professors: {
+      columns: ['id','name','department_id','experience'],
+      data: [
+        {id:1,name:'Dr. A. Gupta',department_id:101,experience:14},
+        {id:2,name:'Dr. S. Mehta',department_id:102,experience:10},
+        {id:3,name:'Dr. R. Joshi',department_id:103,experience:8},
+      ]
+    }
+  };
 
-  // WHERE filtering (basic)
+  const tableNames = Object.keys(SAMPLE_DATA);
+  const matchedName = tableNames.find(n => upper.includes('FROM ' + n.toUpperCase()));
+  if (!matchedName) return { success:true, columns:['result'], rows:[['Query processed']], rowCount:1, executionTimeMs:2, isDDL:false };
+
+  const tableData = SAMPLE_DATA[matchedName];
+  let data = [...tableData.data];
+  const colNames = tableData.columns;
+
   if (/WHERE\s+(.+?)(?:\s+ORDER|\s+GROUP|\s+LIMIT|;|$)/i.test(trimmed)) {
-    const whereClause = RegExp.$1.trim();
-    // department_id filter
-    const deptMatch = whereClause.match(/department_id\s*=\s*(\d+)/i);
-    if (deptMatch) data = data.filter(r => r.department_id === parseInt(deptMatch[1]));
-    // cgpa >= x
-    const cgpaGteMatch = whereClause.match(/cgpa\s*>=\s*([\d.]+)/i);
-    if (cgpaGteMatch) data = data.filter(r => r.cgpa >= parseFloat(cgpaGteMatch[1]));
-    // cgpa > x
-    const cgpaGtMatch = whereClause.match(/cgpa\s*>\s*([\d.]+)/i);
-    if (cgpaGtMatch && !cgpaGteMatch) data = data.filter(r => r.cgpa > parseFloat(cgpaGtMatch[1]));
-    // credits = x
-    const creditsMatch = whereClause.match(/credits\s*=\s*(\d+)/i);
-    if (creditsMatch) data = data.filter(r => r.credits === parseInt(creditsMatch[1]));
-    // age >= x
-    const ageGteMatch = whereClause.match(/age\s*>=\s*(\d+)/i);
-    if (ageGteMatch) data = data.filter(r => r.age >= parseInt(ageGteMatch[1]));
+    const wc = RegExp.$1.trim();
+    const deptM = wc.match(/department_id\s*=\s*(\d+)/i);
+    if (deptM) data = data.filter(r => r.department_id === parseInt(deptM[1]));
+    const cgpaGteM = wc.match(/cgpa\s*>=\s*([\d.]+)/i);
+    if (cgpaGteM) data = data.filter(r => r.cgpa >= parseFloat(cgpaGteM[1]));
+    const cgpaGtM = wc.match(/cgpa\s*>\s*([\d.]+)/i);
+    if (cgpaGtM && !cgpaGteM) data = data.filter(r => r.cgpa > parseFloat(cgpaGtM[1]));
+    const credM = wc.match(/credits\s*=\s*(\d+)/i);
+    if (credM) data = data.filter(r => r.credits === parseInt(credM[1]));
   }
-
-  // ORDER BY
   if (/ORDER\s+BY\s+(\w+)\s*(ASC|DESC)?/i.test(upper)) {
     const col = RegExp.$1.toLowerCase();
     const dir = (RegExp.$2 || 'ASC').toUpperCase();
     data = [...data].sort((a, b) => {
       const av = a[col], bv = b[col];
-      if (av === undefined || bv === undefined) return 0;
-      if (typeof av === 'number' && typeof bv === 'number') return dir === 'ASC' ? av - bv : bv - av;
+      if (av === undefined) return 0;
+      if (typeof av === 'number') return dir === 'ASC' ? av - bv : bv - av;
       return dir === 'ASC' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
     });
   }
-
-  // LIMIT
   if (/LIMIT\s+(\d+)/i.test(upper)) data = data.slice(0, parseInt(RegExp.$1));
-
-  // COUNT(*)
-  if (/COUNT\s*\(\s*\*\s*\)/i.test(upper)) {
-    return { success:true, columns:['count'], rows:[[data.length]], rowCount:1, executionTimeMs: Math.floor(Math.random()*5)+2 };
-  }
-
-  // AVG / MAX / MIN / SUM
+  if (/COUNT\s*\(\s*\*\s*\)/i.test(upper)) return { success:true, columns:['count'], rows:[[data.length]], rowCount:1, executionTimeMs:2, isDDL:false };
   if (/AVG\s*\(\s*cgpa\s*\)/i.test(upper)) {
-    const avg = data.reduce((s, r) => s + (r.cgpa || 0), 0) / data.length;
-    const max = Math.max(...data.map(r => r.cgpa || 0));
-    return { success:true, columns:['avg_cgpa','max_cgpa'], rows:[[avg.toFixed(2), max]], rowCount:1, executionTimeMs: Math.floor(Math.random()*5)+2 };
+    const avg = data.reduce((s,r)=>s+(r.cgpa||0),0)/data.length;
+    return { success:true, columns:['avg_cgpa'], rows:[[avg.toFixed(2)]], rowCount:1, executionTimeMs:2, isDDL:false };
   }
 
-  // SELECT columns
   let selectedCols = colNames;
-  const selectMatch = trimmed.match(/^SELECT\s+(.+?)\s+FROM/i);
-  if (selectMatch) {
-    const selectPart = selectMatch[1].trim();
-    if (selectPart !== '*') {
-      selectedCols = selectPart.split(',').map(c => c.trim().split(/\s+AS\s+/i)[0].trim().toLowerCase());
-      selectedCols = selectedCols.filter(c => colNames.includes(c));
-      if (selectedCols.length === 0) selectedCols = colNames;
-    }
+  const sm = trimmed.match(/^SELECT\s+(.+?)\s+FROM/i);
+  if (sm && sm[1].trim() !== '*') {
+    selectedCols = sm[1].split(',').map(c=>c.trim().split(/\s+AS\s+/i)[0].trim().toLowerCase()).filter(c=>colNames.includes(c));
+    if (!selectedCols.length) selectedCols = colNames;
   }
-
   const rows = data.map(row => selectedCols.map(c => row[c] !== undefined ? row[c] : null));
+  return { success:true, columns:selectedCols, rows, rowCount:rows.length, executionTimeMs:Math.floor(Math.random()*6)+1, isDDL:false };
+}
 
-  return {
-    success: true,
-    columns: selectedCols,
-    rows,
-    rowCount: rows.length,
-    executionTimeMs: Math.floor(Math.random() * 8) + 2,
-  };
+// =============================================
+// CREATE TABLE WIZARD
+// =============================================
+let wizardCols = [];
+function openCreateWizard() {
+  wizardCols = [{ name: 'id', type: 'INTEGER', pk: true }];
+  document.getElementById('wizard-table-name').value = '';
+  renderWizardCols();
+  document.getElementById('create-wizard').classList.add('show');
+}
+function closeWizard() { document.getElementById('create-wizard').classList.remove('show'); }
+function closeWizardIfBg(e) { if (e.target === document.getElementById('create-wizard')) closeWizard(); }
+
+function addWizardCol() {
+  wizardCols.push({ name: '', type: 'TEXT', pk: false });
+  renderWizardCols();
+}
+
+function removeWizardCol(idx) {
+  wizardCols.splice(idx, 1);
+  renderWizardCols();
+}
+
+function renderWizardCols() {
+  const container = document.getElementById('wizard-cols');
+  container.innerHTML = wizardCols.map((col, i) => `
+    <div class="col-def-row">
+      <input placeholder="col_name" value="${col.name}" oninput="wizardCols[${i}].name=this.value" />
+      <select onchange="wizardCols[${i}].type=this.value">
+        ${['INTEGER','TEXT','NUMERIC','REAL','BLOB'].map(t => `<option ${col.type===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-muted);white-space:nowrap">
+        <input type="checkbox" ${col.pk?'checked':''} onchange="wizardCols[${i}].pk=this.checked"> PK
+      </label>
+      ${wizardCols.length > 1 ? `<button class="remove-col-btn" onclick="removeWizardCol(${i})">✕</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function executeWizardCreate() {
+  const tableName = document.getElementById('wizard-table-name').value.trim();
+  if (!tableName) { showToast('⚠️ Please enter a table name.'); return; }
+  if (wizardCols.some(c => !c.name.trim())) { showToast('⚠️ All columns need a name.'); return; }
+
+  const colDefs = wizardCols.map(c => {
+    let def = `${c.name} ${c.type}`;
+    if (c.pk) def += ' PRIMARY KEY';
+    return def;
+  }).join(',\n  ');
+
+  const sql = `CREATE TABLE ${tableName} (\n  ${colDefs}\n);`;
+  document.getElementById('sql-editor').value = sql;
+  closeWizard();
+  navigate('lab');
+  setTimeout(() => runQuery(), 100);
+}
+
+// =============================================
+// CHALLENGES
+// =============================================
+function renderChallenges() {
+  const list = document.getElementById('challenge-list');
+  list.innerHTML = CHALLENGES.map(c => `
+    <div class="challenge-card" onclick="startChallenge(\`${c.query.replace(/`/g,'\\`')}\`)">
+      <div class="challenge-card-top">
+        <span class="challenge-title">${c.title}</span>
+        ${c.completed
+          ? `<span class="done-badge">✓ Done</span>`
+          : `<span class="badge badge-warning">+${c.xp} XP</span>`
+        }
+      </div>
+      <div class="challenge-desc">${c.desc}</div>
+      <div class="challenge-footer">
+        <span class="badge badge-muted">${c.difficulty}</span>
+        <span style="font-size:12px;font-weight:700;color:var(--primary-light)">Solve →</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// =============================================
+// PROFILE
+// =============================================
+function renderProfile() {
+  const mastery = document.getElementById('profile-mastery');
+  mastery.innerHTML = MASTERY.map(m => `
+    <div class="mastery-item">
+      <div class="mastery-label-row">
+        <span class="mastery-topic">${m.topic}</span>
+        <span class="mastery-pct">${m.percentage}%</span>
+      </div>
+      <div class="progress-wrap" style="height:5px">
+        <div class="progress-bar progress-bar-primary" style="width:${m.percentage}%"></div>
+      </div>
+    </div>
+  `).join('');
+
+  const badges = document.getElementById('profile-badges');
+  badges.innerHTML = ACHIEVEMENTS.map(a => `
+    <div class="badge-item">
+      <div class="badge-icon">${a.icon}</div>
+      <div>
+        <div class="badge-title">${a.title}</div>
+        <div class="badge-desc">${a.desc}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// =============================================
+// TOAST
+// =============================================
+let toastTimeout;
+function showToast(msg) {
+  let toast = document.getElementById('app-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'app-toast';
+    toast.style.cssText = `
+      position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+      background:#1E293B; border:1px solid #334155;
+      color:#F8FAFC; padding:10px 18px; border-radius:24px;
+      font-size:13px; font-weight:700; z-index:9999;
+      box-shadow:0 8px 24px rgba(0,0,0,0.4);
+      animation:fadeIn 0.2s ease; white-space:nowrap;
+    `;
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.display = 'block';
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => { toast.style.display = 'none'; }, 2800);
 }
 
 // =============================================
@@ -2050,11 +2367,24 @@ function executeSQLSimulator(queryText) {
 window.addEventListener('DOMContentLoaded', () => {
   renderHomeMastery();
   renderProfile();
-  renderLab();
-  renderLearn();
   renderChallenges();
 
-  // Tab handling in SQL editor
+  // Initialize sidebar state based on screen size
+  const sidebar = document.getElementById('lab-sidebar');
+  if (window.innerWidth >= 768) {
+    sidebarOpen = true;
+    sidebar.classList.add('open');
+  } else {
+    sidebarOpen = false;
+    sidebar.classList.add('closed');
+  }
+
+  // sql.js async init
+  initSQLite().catch(() => {
+    console.warn('sql.js failed to init, simulator mode active');
+  });
+
+  // Keyboard shortcuts
   document.getElementById('sql-editor').addEventListener('keydown', function(e) {
     if (e.key === 'Tab') {
       e.preventDefault();
@@ -2065,6 +2395,16 @@ window.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       runQuery();
+    }
+  });
+
+  // Responsive sidebar
+  window.addEventListener('resize', () => {
+    const sidebar = document.getElementById('lab-sidebar');
+    if (window.innerWidth >= 768 && !sidebarOpen) {
+      sidebarOpen = true;
+      sidebar.classList.remove('closed');
+      sidebar.classList.add('open');
     }
   });
 });

@@ -1,0 +1,7 @@
+[build]
+  publish = "apps/admin"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

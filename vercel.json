@@ -1,21 +1,10 @@
 {
   "framework": null,
-  "buildCommand": "npm run build --workspace=@queryquest/api",
   "outputDirectory": "apps/admin",
-  "functions": {
-    "api/index.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.js"
-    },
     {
       "src": "/(.*)",
       "dest": "/index.html"
     }
   ]
 }
-
