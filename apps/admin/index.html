@@ -145,7 +145,9 @@
       font-size: 12px; font-weight: 700;
       color: var(--text-secondary);
       transition: all 0.2s;
+      cursor: pointer;
     }
+    .stat-pill:hover { border-color: currentColor; }
     .stat-pill.streak { color: var(--warning); border-color: var(--warning-border); background: var(--warning-subtle); }
     .stat-pill.xp { color: var(--success); border-color: var(--success-border); background: var(--success-subtle); }
     
@@ -326,6 +328,12 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .metric-card.clickable { cursor: pointer; }
+    .metric-card.clickable:hover {
+      border-color: var(--primary-light);
+      transform: translateY(-2px);
     }
     .metric-top { display: flex; align-items: center; justify-content: space-between; }
     .metric-icon-box {
@@ -623,6 +631,7 @@
       justify-content: space-between;
       padding: 6px 0 12px 0;
       gap: 12px;
+      flex-wrap: wrap;
     }
     .run-btn-primary {
       background: var(--primary);
@@ -665,6 +674,8 @@
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 8px;
     }
     .data-table-wrap { overflow-x: auto; max-height: 300px; }
     .data-grid {
@@ -709,7 +720,18 @@
     .challenge-row-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
     .challenge-title-text { font-size: 15px; font-weight: 700; }
     .challenge-body-text { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 14px; }
-    .challenge-row-actions { display: flex; justify-content: space-between; align-items: center; }
+    .challenge-hint-box {
+      display: none;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+    }
+    .challenge-hint-box.open { display: block; }
+    .challenge-row-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
 
     /* =====================================================
        PAGE 4: HANDBOOK / CATEGORIES
@@ -754,7 +776,7 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      max-width: 440px;
+      max-width: 460px;
       width: 100%;
       padding: 24px;
       box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
@@ -818,20 +840,23 @@
     </div>
 
     <div class="header-right">
-      <div class="stat-pill streak" title="Consecutive Practice Streak">
+      <!-- Clickable Streak Pill -->
+      <div class="stat-pill streak" onclick="openStreakInfoDialog()" title="Click to inspect streak rules">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
         </svg>
         <span id="streak-counter-val">0</span>
       </div>
 
-      <div class="stat-pill xp" title="Earned XP">
+      <!-- Clickable XP Pill -->
+      <div class="stat-pill xp" onclick="openXPInfoDialog()" title="Click to view XP breakdown">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
         </svg>
         <span id="xp-counter-val">0 XP</span>
       </div>
 
+      <!-- Profile Button -->
       <div class="user-profile-btn" onclick="navigate('profile')" title="Profile & Settings">
         <div class="user-avatar-sm" id="nav-avatar-initials">U</div>
         <span class="user-name-sm" id="nav-user-name">User</span>
@@ -875,9 +900,9 @@
           </div>
         </div>
 
-        <!-- Performance & Progression Matrix -->
+        <!-- Performance & Progression Matrix (All 4 Cards Clickable) -->
         <div class="metrics-row">
-          <div class="metric-card">
+          <div class="metric-card clickable" onclick="openStreakInfoDialog()" title="Click for Streak Rules">
             <div class="metric-top">
               <span class="metric-label">Practice Streak</span>
               <div class="metric-icon-box" style="color:var(--warning);">
@@ -887,9 +912,10 @@
               </div>
             </div>
             <div class="metric-val" id="dash-metric-streak" style="color:var(--warning);">0 Days</div>
+            <div style="font-size:11px;color:var(--text-muted);">Daily active logins →</div>
           </div>
 
-          <div class="metric-card">
+          <div class="metric-card clickable" onclick="openXPInfoDialog()" title="Click for XP Breakdown">
             <div class="metric-top">
               <span class="metric-label">Experience Points</span>
               <div class="metric-icon-box" style="color:var(--success);">
@@ -899,9 +925,10 @@
               </div>
             </div>
             <div class="metric-val" id="dash-metric-xp" style="color:var(--success);">0 XP</div>
+            <div style="font-size:11px;color:var(--text-muted);">View leveling ladder →</div>
           </div>
 
-          <div class="metric-card">
+          <div class="metric-card clickable" onclick="navigate('lab')" title="Click to Open SQL Console">
             <div class="metric-top">
               <span class="metric-label">Executed Queries</span>
               <div class="metric-icon-box" style="color:var(--primary-light);">
@@ -913,9 +940,10 @@
               </div>
             </div>
             <div class="metric-val" id="dash-metric-queries">0</div>
+            <div style="font-size:11px;color:var(--text-muted);">Launch SQL studio →</div>
           </div>
 
-          <div class="metric-card">
+          <div class="metric-card clickable" onclick="navigate('challenges')" title="Click to View Challenges">
             <div class="metric-top">
               <span class="metric-label">Solved Problems</span>
               <div class="metric-icon-box" style="color:var(--accent-azure);">
@@ -926,17 +954,18 @@
               </div>
             </div>
             <div class="metric-val" id="dash-metric-challenges">0</div>
+            <div style="font-size:11px;color:var(--text-muted);">Open challenge list →</div>
           </div>
         </div>
 
-        <!-- Tier & Progress Bar -->
-        <div class="card" style="margin-bottom:20px;">
+        <!-- Tier & Progress Bar (Clickable) -->
+        <div class="card clickable" onclick="openTierRoadmapDialog()" style="margin-bottom:20px;cursor:pointer;" title="Click to view tier roadmap">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
             <div style="font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:8px;">
               <span class="badge badge-primary" id="dash-tier-badge">TIER 1</span>
               <span id="dash-tier-title">SQL Explorer</span>
             </div>
-            <div style="font-size:12px;color:var(--text-muted);font-weight:600;" id="dash-tier-progress-text">0 / 100 XP</div>
+            <div style="font-size:12px;color:var(--text-muted);font-weight:600;" id="dash-tier-progress-text">0 / 100 XP (Click for roadmap)</div>
           </div>
           <div class="progress-bar-container">
             <div class="progress-bar-fill" id="dash-tier-fill" style="width: 0%"></div>
@@ -1098,9 +1127,11 @@
               <div class="card" style="padding:12px;background:var(--bg-subtle);">
                 <div style="font-size:11.5px;font-weight:700;color:var(--text-secondary);margin-bottom:8px;" id="inspector-name-badge">COLUMNS</div>
                 <div id="inspector-columns-content"></div>
-                <div style="display:flex;gap:6px;margin-top:10px;">
-                  <button class="btn btn-sm btn-primary" style="flex:1;" onclick="loadSelectForCurrentTable()">SELECT</button>
-                  <button class="btn btn-sm btn-danger" onclick="dropCurrentTable()">Drop</button>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
+                  <button class="btn btn-sm btn-primary" onclick="loadSelectForCurrentTable()">SELECT</button>
+                  <button class="btn btn-sm btn-secondary" onclick="loadInsertTemplateForCurrentTable()">+ Insert</button>
+                  <button class="btn btn-sm btn-secondary" onclick="copyTableDDL()">Copy DDL</button>
+                  <button class="btn btn-sm btn-danger" onclick="dropCurrentTable()">Drop Table</button>
                 </div>
               </div>
             </div>
@@ -1123,9 +1154,12 @@
               <span style="font-size:12px;font-weight:600;color:var(--text-muted);display:none;@media(min-width:600px){display:inline;}" id="query-active-headline">Console Ready</span>
             </div>
 
-            <div style="display:flex;align-items:center;gap:14px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <!-- Format SQL Action -->
+              <button class="btn btn-sm btn-ghost" onclick="formatSQLEditor()" title="Tidy SQL query formatting">Format</button>
+              
               <!-- Modern Autocomplete Switch -->
-              <div class="switch-wrapper active" id="autocomplete-switch-ui" onclick="toggleAutoSuggest()">
+              <div class="switch-wrapper active" id="autocomplete-switch-ui" onclick="toggleAutoSuggest()" title="Toggle SQL Keyword & Table Suggestions">
                 <span>Suggestions</span>
                 <div class="switch-control"></div>
               </div>
@@ -1159,14 +1193,35 @@
             </div>
 
             <div class="execution-bar">
-              <button class="run-btn-primary" onclick="runLabQuery()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                </svg>
-                <span>RUN QUERY</span>
-                <span class="shortcut-badge">Ctrl+↵</span>
-              </button>
-              <div id="execution-metrics-text" style="font-size:12px;font-weight:600;color:var(--text-muted);"></div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <button class="run-btn-primary" onclick="runLabQuery()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                  <span>RUN QUERY</span>
+                  <span class="shortcut-badge">Ctrl+↵</span>
+                </button>
+                <div id="execution-metrics-text" style="font-size:12px;font-weight:600;color:var(--text-muted);"></div>
+              </div>
+
+              <!-- Output Control Actions -->
+              <div id="result-toolbar-actions" style="display:none;align-items:center;gap:8px;">
+                <button class="btn btn-sm btn-secondary" onclick="exportResultsCSV()" title="Export current results as CSV">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  Export CSV
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="copyResultsJSON()" title="Copy rows as JSON">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  Copy JSON
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1224,21 +1279,25 @@
 
         <!-- Metrics Overview -->
         <div class="metrics-row" style="margin-bottom:16px;">
-          <div class="metric-card">
+          <div class="metric-card clickable" onclick="openStreakInfoDialog()">
             <span class="metric-label">Streak</span>
             <div class="metric-val" id="prof-metric-streak" style="color:var(--warning);">0</div>
+            <span style="font-size:10.5px;color:var(--text-muted);">Consecutive practice</span>
           </div>
-          <div class="metric-card">
+          <div class="metric-card clickable" onclick="openXPInfoDialog()">
             <span class="metric-label">Experience (XP)</span>
             <div class="metric-val" id="prof-metric-xp" style="color:var(--success);">0</div>
+            <span style="font-size:10.5px;color:var(--text-muted);">Points earned</span>
           </div>
-          <div class="metric-card">
+          <div class="metric-card clickable" onclick="navigate('lab')">
             <span class="metric-label">Queries</span>
             <div class="metric-val" id="prof-metric-queries">0</div>
+            <span style="font-size:10.5px;color:var(--text-muted);">Executed in lab</span>
           </div>
-          <div class="metric-card">
+          <div class="metric-card clickable" onclick="navigate('challenges')">
             <span class="metric-label">Solved</span>
             <div class="metric-val" id="prof-metric-solved">0</div>
+            <span style="font-size:10.5px;color:var(--text-muted);">Challenges cleared</span>
           </div>
         </div>
 
@@ -1371,6 +1430,20 @@
   </div>
 </div>
 
+<!-- =====================================================
+     DIALOG: GENERAL INFO DIALOG (FOR STREAK, XP, ROADMAP)
+===================================================== -->
+<div class="dialog-overlay" id="info-dialog">
+  <div class="dialog-sheet">
+    <div class="dialog-title" id="info-dialog-title">Information</div>
+    <div class="dialog-subtitle" id="info-dialog-subtitle">Details on platform progression.</div>
+    <div id="info-dialog-body" style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:18px;"></div>
+    <div style="display:flex;justify-content:flex-end;">
+      <button class="btn btn-primary" onclick="closeInfoDialog()">Got it</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast Box -->
 <div id="system-toast"></div>
 
@@ -1400,6 +1473,7 @@ let sidebarOpen = window.innerWidth >= 820;
 let selectedTableName = null;
 let activeSuggestions = [];
 let selectedSuggestionIdx = 0;
+let lastExecutionResult = null; // Store for CSV/JSON exports
 
 const SQL_KEYWORDS = [
   'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'NOT', 'IN', 'LIKE', 'BETWEEN',
@@ -1408,7 +1482,8 @@ const SQL_KEYWORDS = [
   'COUNT', 'AVG', 'SUM', 'MIN', 'MAX', 'AS', 'DISTINCT',
   'CREATE TABLE', 'DROP TABLE', 'ALTER TABLE', 'ADD COLUMN', 'PRIMARY KEY',
   'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE FROM',
-  'INTEGER', 'TEXT', 'REAL', 'NUMERIC', 'BLOB', 'NOT NULL', 'UNIQUE'
+  'INTEGER', 'TEXT', 'REAL', 'NUMERIC', 'BLOB', 'NOT NULL', 'UNIQUE',
+  'COMMIT', 'ROLLBACK', 'SAVEPOINT', 'BEGIN TRANSACTION'
 ];
 
 const SQL_CATEGORIES = [
@@ -1438,6 +1513,14 @@ const SQL_CATEGORIES = [
       { name: 'AGGREGATIONS', desc: 'Calculate group metrics using GROUP BY', sql: "SELECT department_id, AVG(cgpa) as avg_cgpa, COUNT(*) as student_count\nFROM students\nGROUP BY department_id;" },
       { name: 'RELATIONAL JOINS', desc: 'Combine records across normalized tables', sql: "SELECT s.name AS student_name, d.name AS department\nFROM students s\nJOIN departments d ON s.department_id = d.id;" }
     ]
+  },
+  {
+    id: 'tcl', name: 'TCL', title: 'Transaction Control Language',
+    desc: 'Manage transactional integrity and state changes.',
+    commands: [
+      { name: 'BEGIN & COMMIT', desc: 'Atomically commit changes to the database', sql: 'BEGIN TRANSACTION;\nUPDATE students SET cgpa = 9.0 WHERE id = 3;\nCOMMIT;' },
+      { name: 'ROLLBACK', desc: 'Revert operations executed within a transaction', sql: 'BEGIN TRANSACTION;\nDELETE FROM students WHERE id = 5;\nROLLBACK;' }
+    ]
   }
 ];
 
@@ -1448,6 +1531,7 @@ const CHALLENGES = [
     desc: 'Retrieve student name and CGPA for Computer Science (department_id = 101) with cgpa >= 8.0, ordered by CGPA descending.',
     difficulty: 'Intermediate',
     xp: 50,
+    hint: 'Use WHERE department_id = 101 AND cgpa >= 8.0 ORDER BY cgpa DESC.',
     sampleQuery: 'SELECT name, cgpa FROM students WHERE department_id = 101 AND cgpa >= 8.0 ORDER BY cgpa DESC;',
     validator: (rows) => rows && rows.length === 2 && rows[0][1] >= 8.0
   },
@@ -1457,6 +1541,7 @@ const CHALLENGES = [
     desc: 'Query all courses offering exactly 4 academic credits.',
     difficulty: 'Beginner',
     xp: 30,
+    hint: 'Filter on the courses table where credits = 4.',
     sampleQuery: 'SELECT name, credits FROM courses WHERE credits = 4;',
     validator: (rows) => rows && rows.length === 2 && rows.every(r => r[1] === 4)
   },
@@ -1466,6 +1551,7 @@ const CHALLENGES = [
     desc: 'Count total students enrolled in department 102 (alias as student_count).',
     difficulty: 'Intermediate',
     xp: 40,
+    hint: 'Use aggregate COUNT(*) with a WHERE filter on department_id = 102.',
     sampleQuery: 'SELECT COUNT(*) AS student_count FROM students WHERE department_id = 102;',
     validator: (rows) => rows && rows.length === 1 && Number(rows[0][0]) === 2
   },
@@ -1475,6 +1561,7 @@ const CHALLENGES = [
     desc: 'List all student names and email addresses sorted alphabetically by name.',
     difficulty: 'Beginner',
     xp: 25,
+    hint: 'Select name and email columns from students with ORDER BY name ASC.',
     sampleQuery: 'SELECT name, email FROM students ORDER BY name ASC;',
     validator: (rows) => rows && rows.length >= 5 && rows[0][0] === 'Ananya Verma'
   },
@@ -1484,6 +1571,7 @@ const CHALLENGES = [
     desc: 'Join students and departments to present each student with their corresponding department name.',
     difficulty: 'Advanced',
     xp: 70,
+    hint: 'Use INNER JOIN on students.department_id = departments.id.',
     sampleQuery: 'SELECT s.name AS student, d.name AS department FROM students s JOIN departments d ON s.department_id = d.id;',
     validator: (rows, cols) => rows && rows.length >= 5 && cols && cols.length >= 2
   },
@@ -1493,6 +1581,7 @@ const CHALLENGES = [
     desc: 'Create table "scores" with id (INTEGER PRIMARY KEY) and score (INTEGER), then insert at least 1 record.',
     difficulty: 'Master',
     xp: 80,
+    hint: 'Execute CREATE TABLE scores (id INTEGER PRIMARY KEY, score INTEGER); followed by an INSERT INTO scores VALUES (1, 98);',
     sampleQuery: 'CREATE TABLE scores (id INTEGER PRIMARY KEY, score INTEGER);\nINSERT INTO scores VALUES (1, 98);\nSELECT * FROM scores;',
     validator: () => {
       try {
@@ -1644,6 +1733,69 @@ function resetUserProgress() {
 
 function switchUser() {
   openAuthModal(false);
+}
+
+// =============================================
+// INFO MODALS (STREAK, XP, ROADMAP)
+// =============================================
+function openStreakInfoDialog() {
+  document.getElementById('info-dialog-title').textContent = 'Practice Streak Tracking 🔥';
+  document.getElementById('info-dialog-subtitle').textContent = 'Maintain daily database practice momentum.';
+  document.getElementById('info-dialog-body').innerHTML = `
+    <p style="margin-bottom:10px;">Your <strong>Day Streak</strong> reflects consecutive calendar days in which you execute at least one valid SQL statement in the lab or solve a challenge.</p>
+    <ul style="padding-left:20px;margin-bottom:10px;">
+      <li><strong>+1 Day:</strong> Awarded on your first query of a new calendar day.</li>
+      <li><strong>Streak Protection:</strong> Multiple queries on the same day maintain your active streak.</li>
+      <li><strong>Missing a Day:</strong> If more than 24-48 hours elapse without an execution, your streak resets to 1 upon your next query.</li>
+    </ul>
+    <p>Current streak: <strong>${currentUser.streak || 0} consecutive days</strong>.</p>
+  `;
+  document.getElementById('info-dialog').classList.add('active');
+}
+
+function openXPInfoDialog() {
+  document.getElementById('info-dialog-title').textContent = 'Experience Points & Tier System ⚡';
+  document.getElementById('info-dialog-subtitle').textContent = 'How to level up and earn rewards.';
+  document.getElementById('info-dialog-body').innerHTML = `
+    <p style="margin-bottom:10px;">Every database interaction in QueryQuest awards real experience points (XP):</p>
+    <ul style="padding-left:20px;margin-bottom:10px;">
+      <li><strong>+10 XP:</strong> For every valid SQL query run in the lab.</li>
+      <li><strong>+30 XP:</strong> For creating custom tables using the Table Builder.</li>
+      <li><strong>+25 to +80 XP:</strong> For solving verified SQL challenges.</li>
+    </ul>
+    <p>Every <strong>100 XP</strong> advances your engineering rank to the next tier.</p>
+  `;
+  document.getElementById('info-dialog').classList.add('active');
+}
+
+function openTierRoadmapDialog() {
+  document.getElementById('info-dialog-title').textContent = 'Engineering Tier Progression 🏆';
+  document.getElementById('info-dialog-subtitle').textContent = 'Career roadmap of SQL mastery.';
+  document.getElementById('info-dialog-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="padding:8px 12px;background:var(--bg-subtle);border-radius:6px;border:1px solid var(--border);">
+        <strong>Tier 1 · Novice Practitioner (0 - 99 XP)</strong><br>
+        <span style="font-size:12px;color:var(--text-muted);">Master basic SELECT, WHERE clauses, and simple table lookups.</span>
+      </div>
+      <div style="padding:8px 12px;background:var(--bg-subtle);border-radius:6px;border:1px solid var(--border);">
+        <strong>Tier 2 · Query Specialist (100 - 199 XP)</strong><br>
+        <span style="font-size:12px;color:var(--text-muted);">Proficient in relational joins (INNER, LEFT) and group summaries (GROUP BY, HAVING).</span>
+      </div>
+      <div style="padding:8px 12px;background:var(--bg-subtle);border-radius:6px;border:1px solid var(--border);">
+        <strong>Tier 3 · Relational Architect (200 - 299 XP)</strong><br>
+        <span style="font-size:12px;color:var(--text-muted);">Fluent in schema design (CREATE/ALTER/DROP), indexes, and constraints.</span>
+      </div>
+      <div style="padding:8px 12px;background:var(--bg-subtle);border-radius:6px;border:1px solid var(--border);">
+        <strong>Tier 4 · Database Principal (300+ XP)</strong><br>
+        <span style="font-size:12px;color:var(--text-muted);">Mastery of query optimization, complex nested subqueries, and transactions.</span>
+      </div>
+    </div>
+  `;
+  document.getElementById('info-dialog').classList.add('active');
+}
+
+function closeInfoDialog() {
+  document.getElementById('info-dialog').classList.remove('active');
 }
 
 // =============================================
@@ -1882,6 +2034,31 @@ function loadSelectForCurrentTable() {
   if (window.innerWidth < 820 && sidebarOpen) toggleSidebar();
 }
 
+function loadInsertTemplateForCurrentTable() {
+  if (!selectedTableName) return;
+  const cols = getTableMetadata(selectedTableName);
+  const colNames = cols.map(c => c.name).join(', ');
+  const valPlaceholders = cols.map(c => c.type.includes('INT') ? '1' : "'sample'").join(', ');
+  document.getElementById('sql-editor').value = `INSERT INTO ${selectedTableName} (${colNames})\nVALUES (${valPlaceholders});`;
+  notifyToast(`Insert template generated for ${selectedTableName}`);
+  if (window.innerWidth < 820 && sidebarOpen) toggleSidebar();
+}
+
+function copyTableDDL() {
+  if (!selectedTableName) return;
+  try {
+    const res = sqliteDB.exec(`SELECT sql FROM sqlite_master WHERE type='table' AND name='${selectedTableName}';`);
+    if (res.length > 0 && res[0].values[0][0]) {
+      const ddl = res[0].values[0][0];
+      navigator.clipboard.writeText(ddl).then(() => {
+        notifyToast(`Copied DDL for table ${selectedTableName}`);
+      });
+    }
+  } catch (err) {
+    notifyToast('Error copying DDL: ' + err.message);
+  }
+}
+
 function dropCurrentTable() {
   if (!selectedTableName) return;
   if (!confirm(`Execute DROP TABLE "${selectedTableName}"?`)) return;
@@ -1903,17 +2080,20 @@ function runLabQuery() {
   const query = document.getElementById('sql-editor').value.trim();
   const outputEl = document.getElementById('output-view-container');
   const metricEl = document.getElementById('execution-metrics-text');
+  const actionToolbar = document.getElementById('result-toolbar-actions');
 
   if (!query) {
     outputEl.innerHTML = `
       <div style="padding:14px;background:var(--warning-subtle);border:1px solid var(--warning-border);border-radius:6px;color:var(--warning);font-size:13px;">
         Please input a SQL statement to execute.
       </div>`;
+    actionToolbar.style.display = 'none';
     return;
   }
 
   if (!sqlReady || !sqliteDB) {
     outputEl.innerHTML = `<div style="padding:14px;color:var(--danger);font-size:13px;">WASM engine is still loading...</div>`;
+    actionToolbar.style.display = 'none';
     return;
   }
 
@@ -1944,9 +2124,13 @@ function runLabQuery() {
 
     verifyChallengesIfMatching(lastSelect);
 
-    if (lastSelect) {
+    lastExecutionResult = lastSelect;
+
+    if (lastSelect && lastSelect.columns && lastSelect.columns.length > 0) {
       renderDataTable(lastSelect, elapsed);
+      actionToolbar.style.display = 'flex';
     } else {
+      actionToolbar.style.display = 'none';
       outputEl.innerHTML = `
         <div style="padding:14px;background:var(--success-subtle);border:1px solid var(--success-border);border-radius:6px;color:var(--success);font-size:13px;display:flex;align-items:center;gap:8px;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1957,6 +2141,7 @@ function runLabQuery() {
     }
 
   } catch (err) {
+    actionToolbar.style.display = 'none';
     metricEl.textContent = 'Execution Error';
     outputEl.innerHTML = `
       <div style="padding:14px;background:var(--danger-subtle);border:1px solid var(--danger-border);border-radius:6px;color:var(--danger);font-size:13px;">
@@ -1979,7 +2164,7 @@ function renderDataTable(res, elapsed) {
   container.innerHTML = `
     <div class="grid-card">
       <div class="grid-status-header">
-        <span>${rows.length} RECORD${rows.length !== 1 ? 'S' : ''}</span>
+        <span>${rows.length} RECORD${rows.length !== 1 ? 'S' : ''} RETURNED</span>
         <span>${elapsed}ms</span>
       </div>
       <div class="data-table-wrap">
@@ -1995,6 +2180,69 @@ function renderDataTable(res, elapsed) {
         </table>
       </div>
     </div>`;
+}
+
+// =============================================
+// DATA EXPORT (CSV & JSON)
+// =============================================
+function exportResultsCSV() {
+  if (!lastExecutionResult || !lastExecutionResult.columns) {
+    notifyToast('No tabular results available to export.');
+    return;
+  }
+
+  const cols = lastExecutionResult.columns;
+  const rows = lastExecutionResult.values || [];
+
+  let csvContent = cols.join(',') + '\n';
+  rows.forEach(r => {
+    const rowStr = r.map(v => {
+      if (v === null) return '';
+      const s = String(v).replace(/"/g, '""');
+      return s.includes(',') ? `"${s}"` : s;
+    }).join(',');
+    csvContent += rowStr + '\n';
+  });
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `query_export_${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  notifyToast('Exported CSV file.');
+}
+
+function copyResultsJSON() {
+  if (!lastExecutionResult || !lastExecutionResult.columns) {
+    notifyToast('No tabular results available to copy.');
+    return;
+  }
+
+  const cols = lastExecutionResult.columns;
+  const rows = lastExecutionResult.values || [];
+  const list = rows.map(r => {
+    const obj = {};
+    cols.forEach((col, idx) => { obj[col] = r[idx]; });
+    return obj;
+  });
+
+  navigator.clipboard.writeText(JSON.stringify(list, null, 2)).then(() => {
+    notifyToast('Copied rows as JSON to clipboard.');
+  });
+}
+
+function formatSQLEditor() {
+  const ed = document.getElementById('sql-editor');
+  let text = ed.value;
+  SQL_KEYWORDS.forEach(kw => {
+    const regex = new RegExp(`\\b${kw}\\b`, 'gi');
+    text = text.replace(regex, kw.toUpperCase());
+  });
+  ed.value = text;
+  notifyToast('Formatted SQL keywords.');
 }
 
 // =============================================
@@ -2158,6 +2406,7 @@ function insertTextAtCursor(txt) {
 function clearEditor() {
   document.getElementById('sql-editor').value = '';
   document.getElementById('output-view-container').innerHTML = '';
+  document.getElementById('result-toolbar-actions').style.display = 'none';
 }
 
 function toggleSidebar() {
@@ -2185,15 +2434,26 @@ function renderChallenges() {
           </span>
         </div>
         <div class="challenge-body-text">${ch.desc}</div>
+        <div class="challenge-hint-box" id="hint-box-${ch.id}">
+          💡 <strong>Hint:</strong> ${ch.hint}
+        </div>
         <div class="challenge-row-actions">
-          <span class="badge badge-neutral">${ch.difficulty}</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="badge badge-neutral">${ch.difficulty}</span>
+            <button class="btn btn-sm btn-ghost" onclick="toggleChallengeHint('${ch.id}')">Hint</button>
+          </div>
           <button class="btn btn-sm ${isDone ? 'btn-secondary' : 'btn-primary'}" onclick="loadChallengeIntoLab('${ch.id}')">
-            ${isDone ? 'Review' : 'Solve in Console →'}
+            ${isDone ? 'Review in Console' : 'Solve in Console →'}
           </button>
         </div>
       </div>
     `;
   }).join('');
+}
+
+function toggleChallengeHint(id) {
+  const box = document.getElementById(`hint-box-${id}`);
+  if (box) box.classList.toggle('open');
 }
 
 function loadChallengeIntoLab(id) {
@@ -2243,7 +2503,10 @@ function renderHandbook() {
       <div class="accordion-content">
         ${cat.commands.map(cmd => `
           <div style="margin-bottom:16px;">
-            <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:2px;">${cmd.name}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+              <div style="font-size:13px;font-weight:700;color:var(--text-primary);">${cmd.name}</div>
+              <button class="btn btn-sm btn-ghost" onclick="copyHandbookSnippet(\`${cmd.sql.replace(/`/g,'\\`')}\`)">Copy SQL</button>
+            </div>
             <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">${cmd.desc}</div>
             <pre class="mono" style="background:var(--editor-bg);padding:10px;border-radius:6px;font-size:12px;color:#38BDF8;border:1px solid var(--border);overflow-x:auto;">${cmd.sql}</pre>
             <button class="btn btn-sm btn-secondary" style="margin-top:6px;" onclick="loadSampleIntoStudio(\`${cmd.sql.replace(/`/g,'\\`')}\`)">Open in SQL Studio →</button>
@@ -2256,6 +2519,12 @@ function renderHandbook() {
 
 function toggleHandbookCat(id) {
   document.getElementById('cat-' + id).classList.toggle('open');
+}
+
+function copyHandbookSnippet(sql) {
+  navigator.clipboard.writeText(sql).then(() => {
+    notifyToast('SQL copied to clipboard');
+  });
 }
 
 function loadSampleIntoStudio(sql) {
