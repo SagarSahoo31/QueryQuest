@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>QueryQuest — Interactive SQL Workspace & Learning Platform</title>
-  <meta name="description" content="Enterprise-grade SQL training and interactive execution workspace powered by SQLite WebAssembly." />
+  <title>QueryQuest — Interactive SQL Workspace, Friends League & Learning Platform</title>
+  <meta name="description" content="Enterprise-grade SQL training and execution workspace with peer leaderboards, friend comparisons, and SQLite WebAssembly." />
   <meta name="theme-color" content="#0B0F17" />
   
   <!-- Fonts -->
@@ -57,6 +57,10 @@
       --danger-subtle: rgba(239, 68, 68, 0.1);
       --danger-border: rgba(239, 68, 68, 0.25);
 
+      --gold: #F59E0B;
+      --silver: #94A3B8;
+      --bronze: #B45309;
+
       --editor-bg: #080C14;
       --editor-gutter: #0E1422;
 
@@ -99,7 +103,7 @@
     .app { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; position: relative; }
 
     /* =====================================================
-       TOP NAVIGATION BAR (SaaS / CRM HEADER)
+       TOP NAVIGATION BAR
     ===================================================== */
     .header {
       background: var(--surface);
@@ -127,13 +131,6 @@
     }
     .brand-name { color: var(--text-primary); }
     .brand-name span { color: var(--primary-light); font-weight: 600; }
-    .workspace-tag {
-      font-size: 11px; font-weight: 600; color: var(--text-muted);
-      background: var(--bg-subtle); border: 1px solid var(--border);
-      padding: 2px 8px; border-radius: var(--radius-xs);
-      display: none;
-    }
-    @media (min-width: 680px) { .workspace-tag { display: inline-flex; } }
 
     .header-right { display: flex; align-items: center; gap: 10px; }
     .stat-pill {
@@ -151,6 +148,19 @@
     .stat-pill.streak { color: var(--warning); border-color: var(--warning-border); background: var(--warning-subtle); }
     .stat-pill.xp { color: var(--success); border-color: var(--success-border); background: var(--success-subtle); }
     
+    .share-btn-pill {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 12px;
+      background: var(--primary-subtle);
+      border: 1px solid var(--primary-border);
+      border-radius: 20px;
+      font-size: 12px; font-weight: 700;
+      color: var(--primary-light);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .share-btn-pill:hover { background: var(--primary); color: #fff; }
+
     .user-profile-btn {
       display: flex; align-items: center; gap: 8px;
       padding: 4px 8px 4px 4px;
@@ -167,7 +177,7 @@
       color: #fff; font-size: 11px; font-weight: 700;
       display: flex; align-items: center; justify-content: center;
     }
-    .user-name-sm { font-size: 12px; font-weight: 600; color: var(--text-primary); max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .user-name-sm { font-size: 12px; font-weight: 600; color: var(--text-primary); max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     /* =====================================================
        LAYOUT & VIEWS
@@ -177,7 +187,7 @@
     .page.active { display: flex; animation: viewFadeIn 0.18s ease-out; }
     .page-scroll { flex: 1; overflow-y: auto; padding: 24px; max-width: 1200px; width: 100%; margin: 0 auto; }
 
-    /* Bottom Navigation for Mobile & Responsive */
+    /* Bottom Navigation */
     .bottom-nav {
       background: var(--surface);
       border-top: 1px solid var(--border);
@@ -210,7 +220,7 @@
     .nav-label { font-size: 10.5px; font-weight: 700; letter-spacing: -0.01em; }
 
     /* =====================================================
-       COMPONENT PRIMITIVES (CRM DASHBOARD CARDS)
+       COMPONENT PRIMITIVES
     ===================================================== */
     .card {
       background: var(--surface-card);
@@ -245,10 +255,7 @@
       color: var(--text-secondary);
     }
     .btn-secondary:hover { background: var(--surface-hover); color: var(--text-primary); border-color: var(--border-subtle); }
-    .btn-ghost {
-      background: transparent;
-      color: var(--text-secondary);
-    }
+    .btn-ghost { background: transparent; color: var(--text-secondary); }
     .btn-ghost:hover { background: var(--surface-card); color: var(--text-primary); }
     .btn-danger {
       background: var(--danger-subtle);
@@ -259,7 +266,6 @@
     .btn-sm { padding: 5px 10px; font-size: 11.5px; border-radius: var(--radius-xs); }
     .btn-full { width: 100%; }
 
-    /* Badge & Tag */
     .badge {
       display: inline-flex; align-items: center; gap: 5px;
       padding: 3px 8px; border-radius: 4px;
@@ -271,7 +277,6 @@
     .badge-neutral { background: var(--bg-subtle); color: var(--text-muted); border: 1px solid var(--border); }
     .badge-azure { background: var(--accent-azure-subtle); color: var(--accent-azure); border: 1px solid rgba(59, 130, 246, 0.25); }
 
-    /* Progress bar */
     .progress-bar-container {
       background: var(--bg-subtle);
       border: 1px solid var(--border);
@@ -293,25 +298,21 @@
       display: flex; align-items: center; gap: 6px;
     }
 
-    /* =====================================================
-       PAGE 1: DASHBOARD / OVERVIEW
-    ===================================================== */
-    .hero-banner {
-      background: linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(59, 130, 246, 0.05) 100%);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      margin-bottom: 20px;
-      display: flex;
-      flex-direction: column;
+    /* Duel Notification Banner */
+    .duel-banner {
+      display: none;
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(245, 158, 11, 0.15));
+      border: 1px solid var(--primary-border);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      align-items: center;
+      justify-content: space-between;
       gap: 12px;
+      animation: viewFadeIn 0.2s ease-out;
     }
-    .hero-title-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-    .hero-greeting { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
-    .hero-subtitle { font-size: 13.5px; color: var(--text-secondary); max-width: 680px; }
-    .hero-btn-row { display: flex; gap: 10px; margin-top: 4px; }
 
-    /* Metrics Grid (CRM Metric Cards) */
+    /* Metrics Grid */
     .metrics-row {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -345,7 +346,7 @@
     .metric-val { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
     .metric-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
 
-    /* Modules & Workspaces Grid */
+    /* Module Grid */
     .module-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -407,7 +408,7 @@
     .dev-action-links { display: flex; gap: 8px; }
 
     /* =====================================================
-       PAGE 2: SQL LAB (SUPABASE / DATAGRIP STYLE)
+       SQL LAB WORKSPACE
     ===================================================== */
     .workspace-layout {
       display: flex;
@@ -417,7 +418,6 @@
       position: relative;
     }
 
-    /* Database Explorer Sidebar */
     .db-sidebar {
       width: 280px;
       background: var(--surface);
@@ -483,7 +483,6 @@
     .tree-item-name { display: flex; align-items: center; gap: 8px; }
     .tree-item-count { font-size: 10px; font-weight: 700; color: var(--text-muted); background: var(--bg); padding: 2px 5px; border-radius: 4px; }
 
-    /* Main Editor & Execution Plane */
     .lab-workspace {
       flex: 1;
       display: flex;
@@ -504,7 +503,6 @@
     }
     .editor-top-bar-left { display: flex; align-items: center; gap: 10px; }
 
-    /* Modern Toggle Switch (iOS / Linear style) */
     .switch-wrapper {
       display: flex; align-items: center; gap: 8px;
       font-size: 12px; font-weight: 600; color: var(--text-secondary);
@@ -530,7 +528,6 @@
     .switch-wrapper.active .switch-control::after { transform: translateX(14px); }
     .switch-wrapper.active { color: var(--text-primary); }
 
-    /* Editor Frame */
     .editor-frame {
       padding: 14px 16px 0 16px;
       display: flex;
@@ -561,7 +558,6 @@
       resize: vertical;
     }
 
-    /* Autocomplete Dropdown */
     .autocomplete-popover {
       position: absolute;
       top: 100%;
@@ -601,7 +597,6 @@
     .type-table { background: rgba(245, 158, 11, 0.15); color: #FBBF24; }
     .type-column { background: rgba(16, 185, 129, 0.15); color: #34D399; }
 
-    /* SQL Shortcuts Toolbar */
     .action-strip {
       display: flex;
       gap: 6px;
@@ -648,7 +643,6 @@
     .run-btn-primary:hover { background: var(--primary-hover); }
     .shortcut-badge { font-size: 10px; opacity: 0.7; font-weight: 500; }
 
-    /* Results Plane */
     .data-plane {
       flex: 1;
       overflow-y: auto;
@@ -703,8 +697,72 @@
     .data-grid tr:hover td { background: rgba(255, 255, 255, 0.02); }
 
     /* =====================================================
-       PAGE 3: CHALLENGES & GAMIFICATION
+       PAGE 3: LEADERBOARD & SOCIAL HUB
     ===================================================== */
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .leaderboard-table th {
+      text-align: left;
+      padding: 10px 14px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border);
+    }
+    .leaderboard-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: middle;
+    }
+    .leaderboard-row {
+      transition: background 0.15s;
+    }
+    .leaderboard-row:hover {
+      background: var(--surface-card-hover);
+    }
+    .leaderboard-row.current-user {
+      background: rgba(79, 70, 229, 0.08);
+    }
+    .rank-pill {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+    }
+    .rank-1 { background: rgba(245, 158, 11, 0.2); color: var(--gold); border-color: rgba(245, 158, 11, 0.4); }
+    .rank-2 { background: rgba(148, 163, 184, 0.2); color: var(--silver); border-color: rgba(148, 163, 184, 0.4); }
+    .rank-3 { background: rgba(180, 83, 9, 0.2); color: var(--bronze); border-color: rgba(180, 83, 9, 0.4); }
+
+    /* Comparison Head-to-head Card */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .compare-player-box {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      text-align: center;
+    }
+    .compare-metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 12.5px;
+    }
+
+    /* Challenge Row Card */
     .challenge-row-card {
       background: var(--surface-card);
       border: 1px solid var(--border);
@@ -733,33 +791,7 @@
     .challenge-hint-box.open { display: block; }
     .challenge-row-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
 
-    /* =====================================================
-       PAGE 4: HANDBOOK / CATEGORIES
-    ===================================================== */
-    .accordion-item {
-      background: var(--surface-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      margin-bottom: 10px;
-      overflow: hidden;
-    }
-    .accordion-trigger {
-      padding: 16px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .accordion-trigger:hover { background: var(--surface-card-hover); }
-    .accordion-content { display: none; padding: 16px 18px; border-top: 1px solid var(--border); }
-    .accordion-item.open .accordion-content { display: block; }
-    .accordion-item.open .arrow-icon { transform: rotate(180deg); }
-    .arrow-icon { transition: transform 0.2s ease; }
-
-    /* =====================================================
-       MODALS & DIALOGS
-    ===================================================== */
+    /* Modals & Dialogs */
     .dialog-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -776,7 +808,7 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      max-width: 460px;
+      max-width: 480px;
       width: 100%;
       padding: 24px;
       box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
@@ -836,10 +868,21 @@
         </div>
         <div class="brand-name">Query<span>Quest</span></div>
       </div>
-      <span class="workspace-tag">SQLite Studio</span>
     </div>
 
     <div class="header-right">
+      <!-- Share Profile Button -->
+      <button class="share-btn-pill" onclick="openShareProfileDialog()" title="Share Profile / Invite Friends">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+        </svg>
+        <span>Share</span>
+      </button>
+
       <!-- Clickable Streak Pill -->
       <div class="stat-pill streak" onclick="openStreakInfoDialog()" title="Click to inspect streak rules">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -856,8 +899,8 @@
         <span id="xp-counter-val">0 XP</span>
       </div>
 
-      <!-- Profile Button -->
-      <div class="user-profile-btn" onclick="navigate('profile')" title="Profile & Settings">
+      <!-- Profile & Account Switcher Button -->
+      <div class="user-profile-btn" onclick="openAccountSwitcherDialog()" title="Profiles & Account Switcher">
         <div class="user-avatar-sm" id="nav-avatar-initials">U</div>
         <span class="user-name-sm" id="nav-user-name">User</span>
       </div>
@@ -873,12 +916,24 @@
     <div class="page active" id="page-home">
       <div class="page-scroll">
 
+        <!-- Active Duel Banner (Shown if entered via duel link) -->
+        <div class="duel-banner" id="duel-active-banner">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="font-size:24px;">⚔️</div>
+            <div>
+              <div style="font-size:14px;font-weight:800;" id="duel-banner-title">Challenge Duel from Alex!</div>
+              <div style="font-size:12px;color:var(--text-secondary);" id="duel-banner-sub">Can you solve this challenge and beat their score?</div>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-primary" onclick="acceptDuelChallenge()">Accept Duel →</button>
+        </div>
+
         <!-- Executive Hero Banner -->
         <div class="hero-banner">
           <div class="hero-title-row">
             <div>
               <div class="hero-greeting">Welcome back, <span id="dash-user-name">Engineer</span></div>
-              <div class="hero-subtitle">Interactive SQL learning engine & database lab. Execute queries against a zero-latency SQLite WASM kernel.</div>
+              <div class="hero-subtitle">Interactive SQL learning engine, real-time database lab, and multiplayer peer leaderboards.</div>
             </div>
             <div class="badge badge-azure">PRODUCTION READY</div>
           </div>
@@ -890,17 +945,19 @@
               </svg>
               Open SQL Lab
             </button>
-            <button class="btn btn-secondary" onclick="navigate('challenges')">
+            <button class="btn btn-secondary" onclick="navigate('leaderboard')">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="8" r="7"></circle>
-                <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
               </svg>
-              Practice Challenges
+              Friends Leaderboard
             </button>
           </div>
         </div>
 
-        <!-- Performance & Progression Matrix (All 4 Cards Clickable) -->
+        <!-- Metrics Grid -->
         <div class="metrics-row">
           <div class="metric-card clickable" onclick="openStreakInfoDialog()" title="Click for Streak Rules">
             <div class="metric-top">
@@ -943,18 +1000,18 @@
             <div style="font-size:11px;color:var(--text-muted);">Launch SQL studio →</div>
           </div>
 
-          <div class="metric-card clickable" onclick="navigate('challenges')" title="Click to View Challenges">
+          <div class="metric-card clickable" onclick="navigate('leaderboard')" title="Click to View Peer Rankings">
             <div class="metric-top">
-              <span class="metric-label">Solved Problems</span>
+              <span class="metric-label">League Ranking</span>
               <div class="metric-icon-box" style="color:var(--accent-azure);">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  <circle cx="12" cy="8" r="7"></circle>
+                  <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
                 </svg>
               </div>
             </div>
-            <div class="metric-val" id="dash-metric-challenges">0</div>
-            <div style="font-size:11px;color:var(--text-muted);">Open challenge list →</div>
+            <div class="metric-val" id="dash-metric-rank">#1</div>
+            <div style="font-size:11px;color:var(--text-muted);">Friends comparison →</div>
           </div>
         </div>
 
@@ -972,25 +1029,27 @@
           </div>
         </div>
 
-        <!-- Course Modules Grid -->
+        <!-- Core Modules Grid -->
         <div class="section-title">CORE CURRICULUM</div>
         <div class="module-grid">
-          <div class="module-item-card" onclick="navigate('lab')">
+          <div class="module-item-card" onclick="navigate('leaderboard')">
             <div class="module-item-header">
-              <div class="module-icon-box">
+              <div class="module-icon-box" style="background:var(--accent-azure-subtle);border-color:rgba(59,130,246,0.25);color:var(--accent-azure);">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="4 17 10 11 4 5"></polyline>
-                  <line x1="12" y1="19" x2="20" y2="19"></line>
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                 </svg>
               </div>
               <div>
-                <div class="module-title">SQL Studio & Real-Time Console</div>
-                <div class="module-desc">In-memory SQLite terminal with dynamic schema inspector, table builder wizard, and autocompletion.</div>
+                <div class="module-title">Friends & Class League</div>
+                <div class="module-desc">Invite classmates, share your progress link, and compare scores, streaks, and challenge results side-by-side.</div>
               </div>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span class="badge badge-neutral">Interactive Environment</span>
-              <span style="font-size:12px;font-weight:700;color:var(--primary-light);">Launch Studio →</span>
+              <span class="badge badge-azure" id="friends-count-pill">0 Friends Connected</span>
+              <span style="font-size:12px;font-weight:700;color:var(--accent-azure);">View Leaderboard →</span>
             </div>
           </div>
 
@@ -1013,22 +1072,22 @@
             </div>
           </div>
 
-          <div class="module-item-card" onclick="navigate('learn')">
+          <div class="module-item-card" onclick="navigate('lab')">
             <div class="module-item-header">
-              <div class="module-icon-box" style="background:var(--accent-azure-subtle);border-color:rgba(59,130,246,0.25);color:var(--accent-azure);">
+              <div class="module-icon-box">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                  <polyline points="4 17 10 11 4 5"></polyline>
+                  <line x1="12" y1="19" x2="20" y2="19"></line>
                 </svg>
               </div>
               <div>
-                <div class="module-title">SQL Command Handbook</div>
-                <div class="module-desc">Comprehensive reference guide for DDL, DML, DQL, and schema management.</div>
+                <div class="module-title">SQL Studio & Real-Time Console</div>
+                <div class="module-desc">In-memory SQLite terminal with dynamic schema inspector, table builder wizard, and autocompletion.</div>
               </div>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span class="badge badge-azure">Reference Docs</span>
-              <span style="font-size:12px;font-weight:700;color:var(--accent-azure);">Browse Docs →</span>
+              <span class="badge badge-neutral">Interactive Console</span>
+              <span style="font-size:12px;font-weight:700;color:var(--primary-light);">Launch Studio →</span>
             </div>
           </div>
 
@@ -1155,11 +1214,8 @@
             </div>
 
             <div style="display:flex;align-items:center;gap:12px;">
-              <!-- Format SQL Action -->
               <button class="btn btn-sm btn-ghost" onclick="formatSQLEditor()" title="Tidy SQL query formatting">Format</button>
-              
-              <!-- Modern Autocomplete Switch -->
-              <div class="switch-wrapper active" id="autocomplete-switch-ui" onclick="toggleAutoSuggest()" title="Toggle SQL Keyword & Table Suggestions">
+              <div class="switch-wrapper active" id="autocomplete-switch-ui" onclick="toggleAutoSuggest()" title="Toggle Suggestions">
                 <span>Suggestions</span>
                 <div class="switch-control"></div>
               </div>
@@ -1171,8 +1227,6 @@
           <div class="editor-frame">
             <div class="code-container">
               <textarea id="sql-editor" spellcheck="false" placeholder="Write SQL statement... (e.g. SELECT * FROM students;)"></textarea>
-              
-              <!-- Smart Suggestions Popover -->
               <div class="autocomplete-popover" id="autocomplete-popover"></div>
             </div>
 
@@ -1238,13 +1292,59 @@
       </div>
     </div>
 
-    <!-- ===== VIEW 3: REFERENCE HANDBOOK ===== -->
-    <div class="page" id="page-learn">
+    <!-- ===== VIEW 3: LEADERBOARD & SOCIAL HUB ===== -->
+    <div class="page" id="page-leaderboard">
       <div class="page-scroll">
-        <div style="font-size:20px;font-weight:800;letter-spacing:-0.02em;margin-bottom:4px;">SQL Language Reference</div>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;">Structured reference manual for database administration, manipulation, and queries.</p>
-        
-        <div id="handbook-accordion-container"></div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+          <div>
+            <div style="font-size:20px;font-weight:800;letter-spacing:-0.02em;margin-bottom:4px;">Friends & Class League 🏆</div>
+            <p style="font-size:13px;color:var(--text-secondary);">Share your personal invite link with friends to compare scores, streaks, and SQL milestones.</p>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary btn-sm" onclick="openShareProfileDialog()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+              </svg>
+              Share / Invite Link
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="openAddFriendCodeDialog()">+ Add Friend Code</button>
+          </div>
+        </div>
+
+        <!-- Leaderboard Table Card -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="overflow-x:auto;">
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th style="width:60px;">RANK</th>
+                  <th>DEVELOPER / FRIEND</th>
+                  <th>TIER</th>
+                  <th>STREAK</th>
+                  <th>TOTAL XP</th>
+                  <th>SOLVED</th>
+                  <th style="text-align:right;">ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-table-body">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Motivation Banner -->
+        <div class="card" style="margin-top:16px;background:linear-gradient(135deg,rgba(79,70,229,0.08),rgba(16,185,129,0.05));display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <div>
+            <div style="font-size:14px;font-weight:700;">Challenge a Friend to a SQL Duel ⚔️</div>
+            <div style="font-size:12px;color:var(--text-secondary);">Pick any challenge and send your friends a challenge link to race against them.</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="navigate('challenges')">Pick a Challenge →</button>
+        </div>
       </div>
     </div>
 
@@ -1269,9 +1369,10 @@
             <div style="flex:1;">
               <div style="font-size:18px;font-weight:800;" id="profile-card-name">User</div>
               <div style="font-size:12.5px;color:var(--text-secondary);" id="profile-card-email">user@example.com</div>
-              <div style="display:flex;gap:8px;margin-top:10px;">
+              <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+                <button class="btn btn-sm btn-primary" onclick="openShareProfileDialog()">Share Progress Link</button>
                 <button class="btn btn-sm btn-secondary" onclick="openAuthModal(true)">Edit Profile</button>
-                <button class="btn btn-sm btn-secondary" onclick="switchUser()">Switch Account</button>
+                <button class="btn btn-sm btn-secondary" onclick="openAccountSwitcherDialog()">Switch / Add Account</button>
               </div>
             </div>
           </div>
@@ -1301,13 +1402,22 @@
           </div>
         </div>
 
+        <!-- Handbook Link Card -->
+        <div class="card clickable" onclick="openHandbookDialog()" style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+          <div>
+            <div style="font-size:14px;font-weight:700;">SQL Language Handbook 📚</div>
+            <div style="font-size:12px;color:var(--text-muted);">Comprehensive reference for DDL, DML, DQL, and TCL commands.</div>
+          </div>
+          <span style="font-size:13px;font-weight:700;color:var(--primary-light);">Open Handbook →</span>
+        </div>
+
         <!-- Account Data Management -->
         <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px;">
           <div>
-            <div style="font-size:14px;font-weight:700;">Reset Progress & History</div>
-            <div style="font-size:12px;color:var(--text-muted);">Clear all accumulated experience points, streaks, and query logs.</div>
+            <div style="font-size:14px;font-weight:700;">Reset Current Progress</div>
+            <div style="font-size:12px;color:var(--text-muted);">Clear your active XP, streak, and challenge milestones.</div>
           </div>
-          <button class="btn btn-sm btn-danger" onclick="resetUserProgress()">Reset All</button>
+          <button class="btn btn-sm btn-danger" onclick="resetUserProgress()">Reset</button>
         </div>
 
         <!-- Lead Architect Information Box -->
@@ -1359,12 +1469,14 @@
       </svg>
       <span class="nav-label">SQL Lab</span>
     </button>
-    <button class="nav-tab" data-page="learn" onclick="navigate('learn')">
+    <button class="nav-tab" data-page="leaderboard" onclick="navigate('leaderboard')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
       </svg>
-      <span class="nav-label">Handbook</span>
+      <span class="nav-label">League</span>
     </button>
     <button class="nav-tab" data-page="challenges" onclick="navigate('challenges')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1378,11 +1490,133 @@
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
         <circle cx="12" cy="7" r="4"></circle>
       </svg>
-      <span class="nav-label">Settings</span>
+      <span class="nav-label">Profile</span>
     </button>
   </nav>
 
 </div><!-- end .app -->
+
+<!-- =====================================================
+     DIALOG: SHARE PROFILE & INVITE LINK
+===================================================== -->
+<div class="dialog-overlay" id="share-dialog">
+  <div class="dialog-sheet">
+    <div class="dialog-title">Share Profile & Challenge Friends 🔗</div>
+    <div class="dialog-subtitle">Send this unique link to classmates or friends. When they open it, you will automatically be added to their Friends League!</div>
+
+    <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:5px;">YOUR SHAREABLE LINK</label>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <input class="input-control" id="share-link-input" readonly style="margin-bottom:0;font-size:12px;font-family:var(--font-mono);" />
+      <button class="btn btn-primary" onclick="copyShareLink()">Copy</button>
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-secondary" style="flex:1;" onclick="triggerNativeShare()">Share via App...</button>
+      <button class="btn btn-ghost" onclick="closeShareDialog()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     DIALOG: HEAD-TO-HEAD COMPARISON
+===================================================== -->
+<div class="dialog-overlay" id="compare-dialog">
+  <div class="dialog-sheet" style="max-width:520px;">
+    <div class="dialog-title">Head-to-Head Comparison ⚔️</div>
+    <div class="dialog-subtitle">Compare live learning progress, scores, and practice records.</div>
+
+    <div class="compare-grid">
+      <div class="compare-player-box" style="border-color:var(--primary-border);">
+        <div class="dev-avatar-box" style="width:42px;height:42px;margin:0 auto 8px auto;" id="cmp-user-avatar">U</div>
+        <div style="font-size:14px;font-weight:800;" id="cmp-user-name">You</div>
+        <span class="badge badge-primary" id="cmp-user-tier">Tier 1</span>
+      </div>
+
+      <div class="compare-player-box">
+        <div class="dev-avatar-box" style="width:42px;height:42px;margin:0 auto 8px auto;background:linear-gradient(135deg,#059669,#10B981);" id="cmp-peer-avatar">P</div>
+        <div style="font-size:14px;font-weight:800;" id="cmp-peer-name">Peer</div>
+        <span class="badge badge-neutral" id="cmp-peer-tier">Tier 1</span>
+      </div>
+    </div>
+
+    <!-- Comparative Metrics -->
+    <div class="card" style="padding:10px;background:var(--bg-subtle);margin-bottom:16px;">
+      <div class="compare-metric-row">
+        <span id="cmp-user-xp" style="font-weight:700;color:var(--primary-light);">0 XP</span>
+        <span style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;">Experience Points</span>
+        <span id="cmp-peer-xp" style="font-weight:700;color:var(--text-primary);">0 XP</span>
+      </div>
+      <div class="compare-metric-row">
+        <span id="cmp-user-streak" style="font-weight:700;color:var(--warning);">0 Days</span>
+        <span style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;">Practice Streak</span>
+        <span id="cmp-peer-streak" style="font-weight:700;color:var(--warning);">0 Days</span>
+      </div>
+      <div class="compare-metric-row">
+        <span id="cmp-user-queries" style="font-weight:700;">0</span>
+        <span style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;">Executed Queries</span>
+        <span id="cmp-peer-queries" style="font-weight:700;">0</span>
+      </div>
+      <div class="compare-metric-row" style="border-bottom:none;">
+        <span id="cmp-user-solved" style="font-weight:700;color:var(--success);">0</span>
+        <span style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;">Solved Challenges</span>
+        <span id="cmp-peer-solved" style="font-weight:700;color:var(--success);">0</span>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <button class="btn btn-secondary" onclick="closeCompareDialog()">Close</button>
+      <button class="btn btn-primary" onclick="challengeCurrentPeer()">⚔️ Challenge This Peer</button>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================
+     DIALOG: MULTI-USER ACCOUNT SWITCHER
+============================================= -->
+<div class="dialog-overlay" id="account-switcher-dialog">
+  <div class="dialog-sheet">
+    <div class="dialog-title">Multi-User Account Switcher 👥</div>
+    <div class="dialog-subtitle">Switch between different student profiles saved on this device, or onboard a new classmate.</div>
+
+    <div id="accounts-list-container" style="max-height:220px;overflow-y:auto;margin-bottom:16px;"></div>
+
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="openAuthModal(false)">+ Create New Profile</button>
+      <button class="btn btn-secondary" onclick="closeAccountSwitcherDialog()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- =============================================
+     DIALOG: ADD FRIEND BY CODE / LINK
+============================================= -->
+<div class="dialog-overlay" id="add-friend-dialog">
+  <div class="dialog-sheet">
+    <div class="dialog-title">Add Friend by Link / Code ➕</div>
+    <div class="dialog-subtitle">Paste a friend's share URL or friend code to add them to your league.</div>
+
+    <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:5px;">FRIEND SHARE URL OR CODE</label>
+    <input class="input-control" id="friend-code-input" placeholder="e.g. ?friend=ey... or full URL" />
+
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-secondary" style="flex:1;" onclick="closeAddFriendDialog()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="processFriendCodeInput()">Add to League</button>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     DIALOG: HANDBOOK POPUP
+===================================================== -->
+<div class="dialog-overlay" id="handbook-dialog">
+  <div class="dialog-sheet" style="max-width:640px;max-height:85vh;display:flex;flex-direction:column;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="dialog-title" style="margin-bottom:0;">SQL Language Handbook 📚</div>
+      <button class="btn btn-sm btn-ghost" onclick="closeHandbookDialog()">✕</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding-right:4px;" id="handbook-modal-content"></div>
+  </div>
+</div>
 
 <!-- =====================================================
      DIALOG: USER AUTHENTICATION & ONBOARDING
@@ -1452,10 +1686,14 @@
 ===================================================== -->
 <script>
 // =============================================
-// STATE & STORAGE
+// STATE, MULTI-USER REGISTRY & LEAGUE
 // =============================================
-const STORAGE_KEY = 'queryquest_user_v2';
+const STORAGE_USER_KEY = 'queryquest_user_v2';
+const STORAGE_ACCOUNTS_KEY = 'queryquest_accounts_v2';
+const STORAGE_FRIENDS_KEY = 'queryquest_friends_v2';
+
 let currentUser = {
+  id: 'usr_' + Date.now(),
   name: '',
   email: '',
   xp: 0,
@@ -1467,13 +1705,18 @@ let currentUser = {
   autoSuggest: true
 };
 
+let userAccounts = [];
+let friendsList = [];
+let activePeerForCompare = null;
+let activeDuelChallengeId = null;
+
 let sqliteDB = null;
 let sqlReady = false;
 let sidebarOpen = window.innerWidth >= 820;
 let selectedTableName = null;
 let activeSuggestions = [];
 let selectedSuggestionIdx = 0;
-let lastExecutionResult = null; // Store for CSV/JSON exports
+let lastExecutionResult = null;
 
 const SQL_KEYWORDS = [
   'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'NOT', 'IN', 'LIKE', 'BETWEEN',
@@ -1597,15 +1840,24 @@ let wizardColumns = [
   { name: 'name', type: 'TEXT', pk: false }
 ];
 
+// Default Class Benchmark Peers
+const DEFAULT_BENCHMARK_PEERS = [
+  { id: 'peer_1', name: 'Priya Patel', xp: 190, streak: 4, level: 2, queriesRun: 19, solvedCount: 3, isBenchmark: true },
+  { id: 'peer_2', name: 'Arjun Verma', xp: 120, streak: 2, level: 2, queriesRun: 12, solvedCount: 2, isBenchmark: true },
+  { id: 'peer_3', name: 'Rohan Joshi', xp: 60, streak: 1, level: 1, queriesRun: 6, solvedCount: 1, isBenchmark: true }
+];
+
 // =============================================
 // LIFECYCLE INITIALIZATION
 // =============================================
 window.addEventListener('DOMContentLoaded', async () => {
-  loadStoredUser();
+  loadStoredUserAndAccounts();
   await initSQLiteKernel();
   renderHandbook();
   renderChallenges();
   bindEditorEvents();
+  handleURLParameters();
+  renderLeaderboard();
 
   if (!currentUser.name) {
     openAuthModal(false);
@@ -1613,19 +1865,93 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 // =============================================
-// USER PROFILE & PROGRESS ENGINE
+// URL PARAMS (FRIEND LINKS & DUELS)
 // =============================================
-function loadStoredUser() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw) {
-    try { currentUser = JSON.parse(raw); } catch (e) { }
+function handleURLParameters() {
+  const params = new URLSearchParams(window.location.search);
+  
+  // Friend Link: ?friend=<token>
+  if (params.has('friend')) {
+    try {
+      const decoded = JSON.parse(decodeURIComponent(atob(params.get('friend'))));
+      if (decoded && decoded.name && decoded.name !== currentUser.name) {
+        addFriendToLeague(decoded);
+        notifyToast(`🎉 Connected with friend: ${decoded.name}!`);
+      }
+    } catch (e) {
+      console.warn('Could not parse friend link token');
+    }
   }
+
+  // Duel Challenge: ?duel=<id>&from=<name>
+  if (params.has('duel')) {
+    const duelId = params.get('duel');
+    const challenger = params.get('from') || 'A friend';
+    const ch = CHALLENGES.find(c => c.id === duelId);
+    if (ch) {
+      activeDuelChallengeId = duelId;
+      document.getElementById('duel-banner-title').textContent = `⚔️ Challenge Duel from ${challenger}!`;
+      document.getElementById('duel-banner-sub').textContent = `Can you solve "${ch.title}" and claim ${ch.xp} XP?`;
+      document.getElementById('duel-active-banner').style.display = 'flex';
+    }
+  }
+
+  // Clean URL parameters
+  if (window.history && window.history.replaceState && (params.has('friend') || params.has('duel'))) {
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+  }
+}
+
+function acceptDuelChallenge() {
+  if (!activeDuelChallengeId) return;
+  loadChallengeIntoLab(activeDuelChallengeId);
+  document.getElementById('duel-active-banner').style.display = 'none';
+}
+
+// =============================================
+// MULTI-USER & ACCOUNTS ENGINE
+// =============================================
+function loadStoredUserAndAccounts() {
+  // Load Accounts Registry
+  const storedAccounts = localStorage.getItem(STORAGE_ACCOUNTS_KEY);
+  if (storedAccounts) {
+    try { userAccounts = JSON.parse(storedAccounts); } catch (e) { }
+  }
+
+  // Load Active User
+  const storedActive = localStorage.getItem(STORAGE_USER_KEY);
+  if (storedActive) {
+    try { currentUser = JSON.parse(storedActive); } catch (e) { }
+  }
+
+  // Load Friends List
+  const storedFriends = localStorage.getItem(STORAGE_FRIENDS_KEY);
+  if (storedFriends) {
+    try { friendsList = JSON.parse(storedFriends); } catch (e) { }
+  } else {
+    friendsList = [...DEFAULT_BENCHMARK_PEERS];
+    localStorage.setItem(STORAGE_FRIENDS_KEY, JSON.stringify(friendsList));
+  }
+
   refreshUserInterfaceStats();
 }
 
 function persistUserData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(currentUser));
+  // Update in localStorage
+  localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(currentUser));
+
+  // Sync into accounts array
+  const existingIdx = userAccounts.findIndex(a => a.id === currentUser.id || (a.email && a.email === currentUser.email));
+  if (existingIdx >= 0) {
+    userAccounts[existingIdx] = { ...currentUser };
+  } else if (currentUser.name) {
+    userAccounts.push({ ...currentUser });
+  }
+  localStorage.setItem(STORAGE_ACCOUNTS_KEY, JSON.stringify(userAccounts));
+
   refreshUserInterfaceStats();
+  renderLeaderboard();
 }
 
 function refreshUserInterfaceStats() {
@@ -1646,7 +1972,6 @@ function refreshUserInterfaceStats() {
   document.getElementById('dash-metric-streak').textContent = `${streak} Days`;
   document.getElementById('dash-metric-xp').textContent = `${xp} XP`;
   document.getElementById('dash-metric-queries').textContent = currentUser.queriesRun || 0;
-  document.getElementById('dash-metric-challenges').textContent = (currentUser.completedChallenges || []).length;
   
   document.getElementById('dash-tier-badge').textContent = `TIER ${level}`;
   document.getElementById('dash-tier-title').textContent = getTierTitle(level);
@@ -1654,7 +1979,7 @@ function refreshUserInterfaceStats() {
   document.getElementById('dash-tier-progress-text').textContent = `${curProg} / 100 XP to Tier ${level + 1}`;
   document.getElementById('dash-tier-fill').style.width = `${curProg}%`;
 
-  // Profile Sheet
+  // Profile Card
   document.getElementById('profile-card-name').textContent = name;
   document.getElementById('profile-card-email').textContent = currentUser.email || 'developer@workspace.local';
   document.getElementById('profile-card-avatar').textContent = getAvatarInitials(name);
@@ -1663,7 +1988,9 @@ function refreshUserInterfaceStats() {
   document.getElementById('prof-metric-queries').textContent = currentUser.queriesRun || 0;
   document.getElementById('prof-metric-solved').textContent = (currentUser.completedChallenges || []).length;
 
-  // Toggle state
+  document.getElementById('friends-count-pill').textContent = `${friendsList.length} Competitors in League`;
+
+  // Autocomplete switch state
   const switchEl = document.getElementById('autocomplete-switch-ui');
   if (currentUser.autoSuggest !== false) {
     switchEl.classList.add('active');
@@ -1731,12 +2058,274 @@ function resetUserProgress() {
   notifyToast('User metrics reset.');
 }
 
-function switchUser() {
-  openAuthModal(false);
+// =============================================
+// MULTI-PROFILE SWITCHER
+// =============================================
+function openAccountSwitcherDialog() {
+  const container = document.getElementById('accounts-list-container');
+  if (userAccounts.length === 0 && currentUser.name) {
+    userAccounts = [{ ...currentUser }];
+  }
+
+  container.innerHTML = userAccounts.map(acc => {
+    const isActive = acc.id === currentUser.id;
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="user-avatar-sm">${getAvatarInitials(acc.name)}</div>
+          <div>
+            <div style="font-size:13.5px;font-weight:700;color:var(--text-primary);">
+              ${acc.name} ${isActive ? '<span class="badge badge-primary" style="font-size:9px;margin-left:4px;">ACTIVE</span>' : ''}
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);">${acc.xp || 0} XP · Level ${acc.level || 1} · ${acc.streak || 0}d streak</div>
+          </div>
+        </div>
+        ${!isActive ? `<button class="btn btn-sm btn-secondary" onclick="switchToProfile('${acc.id}')">Switch</button>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('account-switcher-dialog').classList.add('active');
+}
+
+function closeAccountSwitcherDialog() {
+  document.getElementById('account-switcher-dialog').classList.remove('active');
+}
+
+function switchToProfile(id) {
+  const acc = userAccounts.find(a => a.id === id);
+  if (!acc) return;
+  currentUser = { ...acc };
+  persistUserData();
+  closeAccountSwitcherDialog();
+  notifyToast(`Switched account to ${acc.name}`);
 }
 
 // =============================================
-// INFO MODALS (STREAK, XP, ROADMAP)
+// SHAREABLE FRIEND LINKS & LEAGUE
+// =============================================
+function generateShareURL() {
+  const payload = {
+    id: currentUser.id,
+    name: currentUser.name || 'Anonymous Learner',
+    xp: currentUser.xp || 0,
+    streak: currentUser.streak || 0,
+    level: currentUser.level || 1,
+    queriesRun: currentUser.queriesRun || 0,
+    solvedCount: (currentUser.completedChallenges || []).length
+  };
+  const token = btoa(encodeURIComponent(JSON.stringify(payload)));
+  return `${window.location.origin}${window.location.pathname}?friend=${token}`;
+}
+
+function openShareProfileDialog() {
+  const shareUrl = generateShareURL();
+  document.getElementById('share-link-input').value = shareUrl;
+  document.getElementById('share-dialog').classList.add('active');
+}
+
+function closeShareDialog() {
+  document.getElementById('share-dialog').classList.remove('active');
+}
+
+function copyShareLink() {
+  const val = document.getElementById('share-link-input').value;
+  navigator.clipboard.writeText(val).then(() => {
+    notifyToast('Share link copied to clipboard!');
+  });
+}
+
+function triggerNativeShare() {
+  const shareUrl = generateShareURL();
+  if (navigator.share) {
+    navigator.share({
+      title: 'QueryQuest SQL League',
+      text: `Compare your SQL skills with ${currentUser.name} on QueryQuest!`,
+      url: shareUrl
+    }).catch(() => {});
+  } else {
+    copyShareLink();
+  }
+}
+
+function openAddFriendCodeDialog() {
+  document.getElementById('friend-code-input').value = '';
+  document.getElementById('add-friend-dialog').classList.add('active');
+}
+
+function closeAddFriendDialog() {
+  document.getElementById('add-friend-dialog').classList.remove('active');
+}
+
+function processFriendCodeInput() {
+  const input = document.getElementById('friend-code-input').value.trim();
+  if (!input) return;
+
+  try {
+    let token = input;
+    if (input.includes('friend=')) {
+      const match = input.match(/friend=([^&]+)/);
+      if (match) token = match[1];
+    }
+    const decoded = JSON.parse(decodeURIComponent(atob(token)));
+    if (decoded && decoded.name) {
+      addFriendToLeague(decoded);
+      closeAddFriendDialog();
+      notifyToast(`Added ${decoded.name} to your Friends League!`);
+    } else {
+      alert('Invalid friend code format.');
+    }
+  } catch (err) {
+    alert('Could not decode friend code. Please ensure the full link or code is pasted.');
+  }
+}
+
+function addFriendToLeague(peer) {
+  const existingIdx = friendsList.findIndex(f => f.name.toLowerCase() === peer.name.toLowerCase());
+  if (existingIdx >= 0) {
+    friendsList[existingIdx] = { ...friendsList[existingIdx], ...peer };
+  } else {
+    friendsList.push({
+      id: 'friend_' + Date.now(),
+      name: peer.name,
+      xp: peer.xp || 0,
+      streak: peer.streak || 0,
+      level: peer.level || 1,
+      queriesRun: peer.queriesRun || 0,
+      solvedCount: peer.solvedCount || 0,
+      isBenchmark: false
+    });
+  }
+  localStorage.setItem(STORAGE_FRIENDS_KEY, JSON.stringify(friendsList));
+  renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  const tbody = document.getElementById('leaderboard-table-body');
+  if (!tbody) return;
+
+  // Combine Current User + Friends List
+  const userEntry = {
+    id: currentUser.id,
+    name: currentUser.name || 'You',
+    xp: currentUser.xp || 0,
+    streak: currentUser.streak || 0,
+    level: currentUser.level || 1,
+    queriesRun: currentUser.queriesRun || 0,
+    solvedCount: (currentUser.completedChallenges || []).length,
+    isSelf: true
+  };
+
+  const combined = [userEntry, ...friendsList.filter(f => f.name.toLowerCase() !== userEntry.name.toLowerCase())];
+
+  // Sort descending by XP then streak
+  combined.sort((a, b) => b.xp - a.xp || b.streak - a.streak);
+
+  // Update User Rank on Dashboard
+  const myRank = combined.findIndex(p => p.isSelf) + 1;
+  document.getElementById('dash-metric-rank').textContent = `#${myRank}`;
+
+  tbody.innerHTML = combined.map((player, idx) => {
+    const rank = idx + 1;
+    let rankBadgeClass = 'rank-pill';
+    if (rank === 1) rankBadgeClass += ' rank-1';
+    else if (rank === 2) rankBadgeClass += ' rank-2';
+    else if (rank === 3) rankBadgeClass += ' rank-3';
+
+    return `
+      <tr class="leaderboard-row ${player.isSelf ? 'current-user' : ''}">
+        <td>
+          <div class="${rankBadgeClass}">${rank}</div>
+        </td>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="user-avatar-sm" style="${player.isSelf ? '' : 'background:linear-gradient(135deg,#059669,#10B981);'}">
+              ${getAvatarInitials(player.name)}
+            </div>
+            <div>
+              <div style="font-weight:700;color:var(--text-primary);">
+                ${player.name} ${player.isSelf ? '<span class="badge badge-primary" style="font-size:9px;margin-left:4px;">YOU</span>' : ''}
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);">${player.isBenchmark ? 'Class Benchmark' : 'Friend'}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <span class="badge badge-neutral">Tier ${player.level || 1}</span>
+        </td>
+        <td>
+          <span style="font-weight:700;color:var(--warning);">🔥 ${player.streak || 0}d</span>
+        </td>
+        <td>
+          <span style="font-weight:800;color:var(--success);">${player.xp || 0} XP</span>
+        </td>
+        <td>
+          <span style="color:var(--text-secondary);">${player.solvedCount || 0}</span>
+        </td>
+        <td style="text-align:right;">
+          ${!player.isSelf ? `
+            <button class="btn btn-sm btn-secondary" onclick="openCompareWithPeer('${player.id}')">
+              Compare
+            </button>
+          ` : '<span style="font-size:11px;color:var(--text-muted);">Your Record</span>'}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// =============================================
+// HEAD-TO-HEAD COMPARISON
+// =============================================
+function openCompareWithPeer(peerId) {
+  const peer = friendsList.find(f => f.id === peerId);
+  if (!peer) return;
+  activePeerForCompare = peer;
+
+  // Populate User
+  document.getElementById('cmp-user-avatar').textContent = getAvatarInitials(currentUser.name);
+  document.getElementById('cmp-user-name').textContent = currentUser.name || 'You';
+  document.getElementById('cmp-user-tier').textContent = `Tier ${currentUser.level || 1}`;
+  document.getElementById('cmp-user-xp').textContent = `${currentUser.xp || 0} XP`;
+  document.getElementById('cmp-user-streak').textContent = `${currentUser.streak || 0} Days`;
+  document.getElementById('cmp-user-queries').textContent = currentUser.queriesRun || 0;
+  document.getElementById('cmp-user-solved').textContent = (currentUser.completedChallenges || []).length;
+
+  // Populate Peer
+  document.getElementById('cmp-peer-avatar').textContent = getAvatarInitials(peer.name);
+  document.getElementById('cmp-peer-name').textContent = peer.name;
+  document.getElementById('cmp-peer-tier').textContent = `Tier ${peer.level || 1}`;
+  document.getElementById('cmp-peer-xp').textContent = `${peer.xp || 0} XP`;
+  document.getElementById('cmp-peer-streak').textContent = `${peer.streak || 0} Days`;
+  document.getElementById('cmp-peer-queries').textContent = peer.queriesRun || 0;
+  document.getElementById('cmp-peer-solved').textContent = peer.solvedCount || 0;
+
+  document.getElementById('compare-dialog').classList.add('active');
+}
+
+function closeCompareDialog() {
+  document.getElementById('compare-dialog').classList.remove('active');
+}
+
+function challengeCurrentPeer() {
+  if (!activePeerForCompare) return;
+  const duelUrl = `${window.location.origin}${window.location.pathname}?duel=ch_1&from=${encodeURIComponent(currentUser.name || 'Your Classmate')}`;
+  navigator.clipboard.writeText(duelUrl).then(() => {
+    notifyToast(`Duel invitation link for ${activePeerForCompare.name} copied!`);
+    closeCompareDialog();
+  });
+}
+
+function shareChallengeWithFriend(chId) {
+  const ch = CHALLENGES.find(c => c.id === chId);
+  const duelUrl = `${window.location.origin}${window.location.pathname}?duel=${chId}&from=${encodeURIComponent(currentUser.name || 'Your Friend')}`;
+  navigator.clipboard.writeText(duelUrl).then(() => {
+    notifyToast(`Challenge duel link for "${ch ? ch.title : 'Challenge'}" copied!`);
+  });
+}
+
+// =============================================
+// INFO DIALOGS & HANDBOOK MODAL
 // =============================================
 function openStreakInfoDialog() {
   document.getElementById('info-dialog-title').textContent = 'Practice Streak Tracking 🔥';
@@ -1798,6 +2387,15 @@ function closeInfoDialog() {
   document.getElementById('info-dialog').classList.remove('active');
 }
 
+function openHandbookDialog() {
+  renderHandbook();
+  document.getElementById('handbook-dialog').classList.add('active');
+}
+
+function closeHandbookDialog() {
+  document.getElementById('handbook-dialog').classList.remove('active');
+}
+
 // =============================================
 // AUTH DIALOG
 // =============================================
@@ -1812,13 +2410,13 @@ function openAuthModal(isEdit = false) {
     desc.textContent = 'Update your developer identity and contact email.';
     cancelBtn.style.display = 'block';
   } else {
-    title.textContent = 'Welcome to QueryQuest';
-    desc.textContent = 'Initialize your personal profile to start your SQL learning curriculum.';
+    title.textContent = 'Create New Developer Profile';
+    desc.textContent = 'Initialize your personal profile to track your scores, streaks, and league rank.';
     cancelBtn.style.display = currentUser.name ? 'block' : 'none';
   }
 
-  document.getElementById('auth-input-name').value = currentUser.name || '';
-  document.getElementById('auth-input-email').value = currentUser.email || '';
+  document.getElementById('auth-input-name').value = isEdit ? (currentUser.name || '') : '';
+  document.getElementById('auth-input-email').value = isEdit ? (currentUser.email || '') : '';
   dialog.classList.add('active');
 }
 
@@ -1835,8 +2433,25 @@ function saveAuthUser() {
     return;
   }
 
-  currentUser.name = name;
-  currentUser.email = email;
+  // If new profile creation
+  if (!currentUser.name || document.getElementById('auth-dialog-title').textContent.includes('Create New')) {
+    currentUser = {
+      id: 'usr_' + Date.now(),
+      name: name,
+      email: email,
+      xp: 0,
+      streak: 0,
+      lastActiveDate: null,
+      level: 1,
+      queriesRun: 0,
+      completedChallenges: [],
+      autoSuggest: true
+    };
+  } else {
+    currentUser.name = name;
+    currentUser.email = email;
+  }
+
   persistUserData();
   closeAuthModal();
   notifyToast(`Profile saved for ${name}`);
@@ -2164,7 +2779,7 @@ function renderDataTable(res, elapsed) {
   container.innerHTML = `
     <div class="grid-card">
       <div class="grid-status-header">
-        <span>${rows.length} RECORD${rows.length !== 1 ? 'S' : ''} RETURNED</span>
+        <span>${rows.length} RECORD${rows.length !== 1 ? 'S' : ''}</span>
         <span>${elapsed}ms</span>
       </div>
       <div class="data-table-wrap">
@@ -2441,6 +3056,7 @@ function renderChallenges() {
           <div style="display:flex;align-items:center;gap:6px;">
             <span class="badge badge-neutral">${ch.difficulty}</span>
             <button class="btn btn-sm btn-ghost" onclick="toggleChallengeHint('${ch.id}')">Hint</button>
+            <button class="btn btn-sm btn-ghost" onclick="shareChallengeWithFriend('${ch.id}')" title="Send a challenge duel link to a friend">⚔️ Challenge Friend</button>
           </div>
           <button class="btn btn-sm ${isDone ? 'btn-secondary' : 'btn-primary'}" onclick="loadChallengeIntoLab('${ch.id}')">
             ${isDone ? 'Review in Console' : 'Solve in Console →'}
@@ -2485,40 +3101,30 @@ function verifyChallengesIfMatching(res) {
 // LANGUAGE REFERENCE HANDBOOK
 // =============================================
 function renderHandbook() {
-  const container = document.getElementById('handbook-accordion-container');
+  const container = document.getElementById('handbook-modal-content');
+  if (!container) return;
   container.innerHTML = SQL_CATEGORIES.map(cat => `
-    <div class="accordion-item" id="cat-${cat.id}">
-      <div class="accordion-trigger" onclick="toggleHandbookCat('${cat.id}')">
-        <div>
-          <div style="font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:8px;">
-            <span class="badge badge-primary">${cat.name}</span>
-            <span>${cat.title}</span>
-          </div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${cat.desc}</div>
-        </div>
-        <svg class="arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
+    <div class="card" style="margin-bottom:12px;padding:14px;background:var(--bg-subtle);">
+      <div style="font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span class="badge badge-primary">${cat.name}</span>
+        <span>${cat.title}</span>
       </div>
-      <div class="accordion-content">
-        ${cat.commands.map(cmd => `
-          <div style="margin-bottom:16px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
-              <div style="font-size:13px;font-weight:700;color:var(--text-primary);">${cmd.name}</div>
-              <button class="btn btn-sm btn-ghost" onclick="copyHandbookSnippet(\`${cmd.sql.replace(/`/g,'\\`')}\`)">Copy SQL</button>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">${cat.desc}</div>
+      ${cat.commands.map(cmd => `
+        <div style="margin-bottom:12px;background:var(--surface);padding:10px;border-radius:6px;border:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <div style="font-size:12.5px;font-weight:700;">${cmd.name}</div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-sm btn-ghost" onclick="copyHandbookSnippet(\`${cmd.sql.replace(/`/g,'\\`')}\`)">Copy</button>
+              <button class="btn btn-sm btn-secondary" onclick="loadSampleIntoStudio(\`${cmd.sql.replace(/`/g,'\\`')}\`)">Try in Studio</button>
             </div>
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">${cmd.desc}</div>
-            <pre class="mono" style="background:var(--editor-bg);padding:10px;border-radius:6px;font-size:12px;color:#38BDF8;border:1px solid var(--border);overflow-x:auto;">${cmd.sql}</pre>
-            <button class="btn btn-sm btn-secondary" style="margin-top:6px;" onclick="loadSampleIntoStudio(\`${cmd.sql.replace(/`/g,'\\`')}\`)">Open in SQL Studio →</button>
           </div>
-        `).join('')}
-      </div>
+          <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:6px;">${cmd.desc}</div>
+          <pre class="mono" style="background:var(--editor-bg);padding:8px;border-radius:4px;font-size:11.5px;color:#38BDF8;overflow-x:auto;">${cmd.sql}</pre>
+        </div>
+      `).join('')}
     </div>
   `).join('');
-}
-
-function toggleHandbookCat(id) {
-  document.getElementById('cat-' + id).classList.toggle('open');
 }
 
 function copyHandbookSnippet(sql) {
@@ -2529,6 +3135,7 @@ function copyHandbookSnippet(sql) {
 
 function loadSampleIntoStudio(sql) {
   document.getElementById('sql-editor').value = sql;
+  closeHandbookDialog();
   navigate('lab');
 }
 
@@ -2606,6 +3213,8 @@ function navigate(pageId) {
 
   if (targetPage) targetPage.classList.add('active');
   if (targetTab) targetTab.classList.add('active');
+
+  if (pageId === 'leaderboard') renderLeaderboard();
 }
 
 let toastTimer = null;
@@ -2614,7 +3223,7 @@ function notifyToast(msg) {
   el.textContent = msg;
   el.style.display = 'block';
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.style.display = 'none'; }, 2500);
+  toastTimer = setTimeout(() => { el.style.display = 'none'; }, 2600);
 }
 </script>
 </body>
