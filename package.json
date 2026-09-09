@@ -9,6 +9,7 @@
     "services/*"
   ],
   "scripts": {
+    "vercel-build": "npm run --workspace=@queryquest/admin build && npm run --workspace=@queryquest/api build",
     "mobile": "npm run --workspace=@queryquest/mobile",
     "api": "npm run --workspace=@queryquest/api",
     "admin": "npm run --workspace=@queryquest/admin",
@@ -36,5 +37,8 @@
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "serverless-http": "^3.1.0"
   }
 }
