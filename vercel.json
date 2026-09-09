@@ -1,5 +1,6 @@
 {
-  "buildCommand": "npm run build --workspace=@queryquest/admin && npm run build --workspace=@queryquest/api",
+  "framework": null,
+  "buildCommand": "npm run build --workspace=@queryquest/api",
   "outputDirectory": "apps/admin",
   "functions": {
     "api/index.js": {
