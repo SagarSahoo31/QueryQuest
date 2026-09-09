@@ -1,4 +1,4 @@
-[build]
+n[build]
   publish = "apps/admin"
 
 [[redirects]]
